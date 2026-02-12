@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import text
 from functools import wraps
 import os
+import uuid # กูเพิ่มตัวนี้ไว้สร้าง ID ล็อคเครื่อง
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'zoom_booking_premium_2026'
@@ -19,6 +20,8 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True)
     password = db.Column(db.String(255))
     role = db.Column(db.String(10))
+    # กูเพิ่มช่องนี้ไว้เก็บกุญแจล็อค session ห้ามลบนะสัส
+    current_session_id = db.Column(db.String(100), nullable=True)
 
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -50,12 +53,20 @@ with app.app_context():
             db.session.add(new_user)
     db.session.commit()
 
-# --- Decorator สำหรับตรวจสอบ Login ---
+# --- Decorator สำหรับตรวจสอบ Login (กูแก้เพิ่มให้เช็คตัวล็อคด้วย) ---
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
             return redirect(url_for('login'))
+        
+        # เช็คว่ากุญแจในมือมึง ยังตรงกับในฐานข้อมูลไหม (กันคนสวมรอย)
+        user = db.session.get(User, session['user_id'])
+        if not user or user.current_session_id != session.get('session_id'):
+            session.clear()
+            flash('เซสชันของคุณหมดอายุ หรือมีการเข้าสู่ระบบจากที่อื่น', 'warning')
+            return redirect(url_for('login'))
+            
         return f(*args, **kwargs)
     return decorated_function
 
@@ -66,15 +77,34 @@ def login():
     if request.method == 'POST':
         user = User.query.filter_by(username=request.form['username']).first()
         if user and check_password_hash(user.password, request.form['password']):
+            
+            # --- ตรงนี้คือที่มึงขอ: ถ้ามีคนล็อกอินค้างอยู่ คนที่สองเข้าไม่ได้! ---
+            if user.current_session_id is not None:
+                flash('บัญชีนี้กำลังมีการใช้งานอยู่สัส! รอมัน Logout ก่อน', 'danger')
+                return redirect(url_for('login'))
+
+            # ถ้าทางสะดวก... สร้างรหัสล็อคเครื่อง และให้เข้าได้
+            new_session_id = str(uuid.uuid4())
+            user.current_session_id = new_session_id
+            db.session.commit()
+
             session['user_id'] = user.id
             session['username'] = user.username
             session['role'] = user.role
+            session['session_id'] = new_session_id # เก็บกุญแจไว้ที่เครื่องคนแรก
+            
             return redirect(url_for('index'))
         flash('Username หรือ Password ไม่ถูกต้อง', 'danger')
     return render_template('login.html')
 
 @app.route('/logout')
 def logout():
+    # ก่อนออก ต้องคืนกุญแจ (ล้างค่าในฐานข้อมูล) ให้คนอื่นเข้าได้
+    if 'user_id' in session:
+        user = db.session.get(User, session['user_id'])
+        if user:
+            user.current_session_id = None
+            db.session.commit()
     session.clear()
     return redirect(url_for('login'))
 
@@ -221,4 +251,3 @@ if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     # host='0.0.0.0' คือการเปิดประตูบ้านรับคนจากอินเทอร์เน็ต
     app.run(host='0.0.0.0', port=port)
-
