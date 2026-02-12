@@ -8,7 +8,7 @@ import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'zoom_booking_premium_2026'
 
-# ใช้ SQLite เพื่อความเสถียรบน Render
+# ใช้ SQLite เพื่อความง่ายในการ Deploy
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -214,7 +214,9 @@ def edit_booking(id):
 
     return redirect(url_for('admin_panel'))
 
-# --- จุดจบปัญหาเรื่อง Port และ Host ---
+# --- แก้ไขตรงนี้เพื่อปิดงาน! ---
 if __name__ == '__main__':
+    # ดึงค่า PORT จาก Render ถ้าไม่มีให้ใช้ 5000
     port = int(os.environ.get("PORT", 5000))
+    # ต้องเป็น host='0.0.0.0' เท่านั้นถึงจะเข้าจากข้างนอกได้
     app.run(host='0.0.0.0', port=port)
