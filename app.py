@@ -4,12 +4,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import text
 from functools import wraps
 import os
-import uuid # กูเพิ่มตัวนี้ไว้สร้าง ID ล็อคเครื่อง
+import uuid 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'zoom_booking_premium_2026'
 
-# ใช้ SQLite เพื่อให้รันบน Render ได้ (SQL Server มึงต้องตั้งค่าเยอะกว่านี้สัส!)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -20,7 +19,7 @@ class User(db.Model):
     username = db.Column(db.String(50), unique=True)
     password = db.Column(db.String(255))
     role = db.Column(db.String(10))
-    # กูเพิ่มช่องนี้ไว้เก็บกุญแจล็อค session ห้ามลบนะสัส
+    
     current_session_id = db.Column(db.String(100), nullable=True)
 
 class Booking(db.Model):
@@ -34,7 +33,6 @@ class Booking(db.Model):
     end_time = db.Column(db.String(5))
     username = db.Column(db.String(50))
 
-# --- สร้าง Database และ User (ย้ายออกมาไว้นอก __main__ เพื่อให้ Render จัดการได้) ---
 with app.app_context():
     db.create_all()
     initial_users = [
@@ -53,14 +51,12 @@ with app.app_context():
             db.session.add(new_user)
     db.session.commit()
 
-# --- Decorator สำหรับตรวจสอบ Login (กูแก้เพิ่มให้เช็คตัวล็อคด้วย) ---
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
             return redirect(url_for('login'))
-        
-        # เช็คว่ากุญแจในมือมึง ยังตรงกับในฐานข้อมูลไหม (กันคนสวมรอย)
+
         user = db.session.get(User, session['user_id'])
         if not user or user.current_session_id != session.get('session_id'):
             session.clear()
@@ -78,12 +74,10 @@ def login():
         user = User.query.filter_by(username=request.form['username']).first()
         if user and check_password_hash(user.password, request.form['password']):
             
-            # --- ตรงนี้คือที่มึงขอ: ถ้ามีคนล็อกอินค้างอยู่ คนที่สองเข้าไม่ได้! ---
             if user.current_session_id is not None:
-                flash('บัญชีนี้กำลังมีการใช้งานอยู่สัส! รอมัน Logout ก่อน', 'danger')
+                flash('บัญชีนี้กำลังมีการใช้งานอยู่', 'danger')
                 return redirect(url_for('login'))
 
-            # ถ้าทางสะดวก... สร้างรหัสล็อคเครื่อง และให้เข้าได้
             new_session_id = str(uuid.uuid4())
             user.current_session_id = new_session_id
             db.session.commit()
