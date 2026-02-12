@@ -216,7 +216,7 @@ def edit_booking(id):
 
 # --- แก้ไขตรงนี้เพื่อเปิดประตูสู่โลกภายนอกบน Render! ---
 if __name__ == '__main__':
-    # Render จะส่ง Port มาให้เราผ่าน os.environ
+    # ดึง Port จากระบบ Render (ถ้าไม่มีให้ใช้ 5000)
     port = int(os.environ.get("PORT", 5000))
-    # ต้องเป็น host='0.0.0.0' เพื่อเปิดรับ connection จากภายนอกเครื่อง
+    # บังคับรันบน 0.0.0.0 เพื่อเปิดประตูรับอินเทอร์เน็ต
     app.run(host='0.0.0.0', port=port)
