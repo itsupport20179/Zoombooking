@@ -1,34 +1,17 @@
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
-import urllib
 from sqlalchemy import text
 from functools import wraps
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'zoom_booking_premium_2026'
 
-# --- Configuration สำหรับ SQL Server ---
-# ย้ำ: อย่าลืมสร้าง Database ว่างชื่อ ZoomBookingDB ใน SSMS ก่อน
-# ย้ำ: ตรวจสอบ SERVER ให้ตรงกับชื่อเครื่องใหม่ และลง ODBC Driver 17
-params = urllib.parse.quote_plus(
-    r'DRIVER={ODBC Driver 17 for SQL Server};'
-    r'SERVER=DELLNBIT\SQLEXPRESS;'
-    r'DATABASE=ZoomBookingDB;'
-    r'Trusted_Connection=yes;'
-)
-app.config['SQLALCHEMY_DATABASE_URI'] = "mssql+pyodbc:///?odbc_connect=" + params
+# ใช้ SQLite เพื่อให้รันบน Render ได้ง่ายที่สุด
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
-
-# --- Decorator สำหรับตรวจสอบ Login ---
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
-            return redirect(url_for('login'))
-        return f(*args, **kwargs)
-    return decorated_function
 
 # --- Models ---
 class User(db.Model):
@@ -47,6 +30,34 @@ class Booking(db.Model):
     start_time = db.Column(db.String(5))
     end_time = db.Column(db.String(5))
     username = db.Column(db.String(50))
+
+# --- สร้าง Database และ User เริ่มต้น (สำคัญมากสำหรับการรันบน Render) ---
+with app.app_context():
+    db.create_all()
+    initial_users = [
+        {'u': 'admin', 'p': 'admin1234', 'r': 'admin'},
+        {'u': 'user1', 'p': 'user1234', 'r': 'user'},
+        {'u': 'user2', 'p': 'user1234', 'r': 'user'},
+        {'u': 'user3', 'p': 'user1234', 'r': 'user'}
+    ]
+    for u_info in initial_users:
+        if not User.query.filter_by(username=u_info['u']).first():
+            new_user = User(
+                username=u_info['u'],
+                password=generate_password_hash(u_info['p']),
+                role=u_info['r']
+            )
+            db.session.add(new_user)
+    db.session.commit()
+
+# --- Decorator สำหรับตรวจสอบ Login ---
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        return f(*args, **kwargs)
+    return decorated_function
 
 # --- Routes ---
 
@@ -203,30 +214,5 @@ def edit_booking(id):
 
     return redirect(url_for('admin_panel'))
 
-# --- Main (เพิ่มส่วนสร้าง Admin และ 3 Users อัตโนมัติ) ---
 if __name__ == '__main__':
-    with app.app_context():
-        # สร้าง Table อัตโนมัติ
-        db.create_all()
-        
-        # รายการบัญชีเริ่มต้น
-        initial_users = [
-            {'u': 'admin', 'p': 'admin1234', 'r': 'admin'},
-            {'u': 'user1', 'p': 'user1234', 'r': 'user'},
-            {'u': 'user2', 'p': 'user1234', 'r': 'user'},
-            {'u': 'user3', 'p': 'user1234', 'r': 'user'}
-        ]
-        
-        for u_info in initial_users:
-            if not User.query.filter_by(username=u_info['u']).first():
-                new_user = User(
-                    username=u_info['u'],
-                    password=generate_password_hash(u_info['p']),
-                    role=u_info['r']
-                )
-                db.session.add(new_user)
-                print(f">>> [System] สร้างบัญชี: {u_info['u']} เรียบร้อย")
-        
-        db.session.commit()
-
     app.run(debug=True)
