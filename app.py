@@ -8,7 +8,7 @@ import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'zoom_booking_premium_2026'
 
-# ใช้ SQLite เพื่อความง่ายในการ Deploy
+# ใช้ SQLite เพื่อให้รันบน Render ได้ (SQL Server มึงต้องตั้งค่าเยอะกว่านี้สัส!)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
@@ -31,7 +31,7 @@ class Booking(db.Model):
     end_time = db.Column(db.String(5))
     username = db.Column(db.String(50))
 
-# --- สร้าง Database และ User เริ่มต้น ---
+# --- สร้าง Database และ User (ย้ายออกมาไว้นอก __main__ เพื่อให้ Render จัดการได้) ---
 with app.app_context():
     db.create_all()
     initial_users = [
@@ -214,9 +214,9 @@ def edit_booking(id):
 
     return redirect(url_for('admin_panel'))
 
-# --- แก้ไขตรงนี้เพื่อปิดงาน! ---
+# --- แก้ไขตรงนี้เพื่อเปิดประตูสู่โลกภายนอกบน Render! ---
 if __name__ == '__main__':
-    # ดึงค่า PORT จาก Render ถ้าไม่มีให้ใช้ 5000
+    # Render จะส่ง Port มาให้เราผ่าน os.environ
     port = int(os.environ.get("PORT", 5000))
-    # ต้องเป็น host='0.0.0.0' เท่านั้นถึงจะเข้าจากข้างนอกได้
+    # ต้องเป็น host='0.0.0.0' เพื่อเปิดรับ connection จากภายนอกเครื่อง
     app.run(host='0.0.0.0', port=port)
