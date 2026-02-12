@@ -1,0 +1,19 @@
+ไฟล์ requirements.txt (สำคัญมาก)
+เวลาไปเครื่องใหม่ คุณไม่ต้องไล่ลงทีละอัน แค่พิมพ์คำสั่งเดียวใน Terminal: pip install -r requirements.txt
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+pyodbc==5.0.1
+Werkzeug==3.0.1
+
+คำแนะนำสำหรับการเตรียมเครื่องใหม่ (Setup Guide)
+ผมสรุปเป็นขั้นตอนที่คุณควรทำตามลำดับเพื่อไม่ให้เกิดข้อผิดพลาด:
+
+ติดตั้ง SQL Server & SSMS: และสร้าง Database เปล่าชื่อ ZoomBookingDB
+
+ติดตั้ง ODBC Driver 17 for SQL Server: (ห้ามลืม เพราะ Python เชื่อมต่อไม่ได้ถ้าไม่มีตัวนี้)
+
+แก้ชื่อ SERVER ใน app.py: ให้ตรงกับชื่อเครื่องใหม่ (เช่น SERVER=NEW-PC\SQLEXPRESS)
+
+ติดตั้ง Library: เปิด CMD ในโฟลเดอร์โปรเจกต์แล้วพิมพ์ pip install -r requirements.txt
+
+รันแอป: พิมพ์ python app.py
