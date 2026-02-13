@@ -84,7 +84,7 @@
             </div>
             <div class="col-md-4 user-controls text-end" style="display: none;">
                 <button class="btn btn-add-user shadow-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                    <i class="fa-solid fa-user-plus me-2"></i>เพิ่มผู้ดูแล (Admin)
+                    <i class="fa-solid fa-user-plus me-2"></i>เพิ่มผู้ใช้งานใหม่
                 </button>
             </div>
         </div>
@@ -136,7 +136,7 @@
                         <tr>
                             <th>ลำดับ</th>
                             <th>Username</th>
-                            <th>สถานะ</th>
+                            <th>สถานะ (Role)</th>
                             <th class="text-end">Action</th>
                         </tr>
                     </thead>
@@ -146,14 +146,20 @@
                             <tr>
                                 <td class="text-muted">{{ loop.index }}</td>
                                 <td class="fw-bold text-dark">{{ u.username }}</td>
-                                <td><span class="badge bg-success rounded-pill px-3">Active Admin</span></td>
+                                <td>
+                                    {% if u.role == 'admin' %}
+                                        <span class="badge bg-primary rounded-pill px-3">Administrator</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary rounded-pill px-3">User / Staff</span>
+                                    {% endif %}
+                                </td>
                                 <td class="text-end">
                                     {% if session.get('user_id')|int != u.id|int %}
                                     <button class="btn btn-sm btn-delete rounded-pill px-3" onclick="confirmDeleteUser('{{ u.id }}', '{{ u.username }}')">
-                                        <i class="fa-solid fa-user-minus"></i> ลบสิทธิ์
+                                        <i class="fa-solid fa-user-minus"></i> ลบผู้ใช้
                                     </button>
                                     {% else %}
-                                    <span class="small text-muted">ตัวคุณเอง</span>
+                                    <span class="badge bg-light text-dark border rounded-pill px-3">ตัวคุณเอง</span>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -185,6 +191,8 @@
                             <select name="department" id="edit_dept" class="form-select rounded-3" required>
                                 <option value="ส่วนเทคโนโลยีสารสนเทศ">ส่วนเทคโนโลยีสารสนเทศ</option>
                                 <option value="ส่วนบัญชี">ส่วนบัญชี</option>
+                                <option value="ส่วนธุรการ">ส่วนธุรการ</option>
+                                <option value="ส่วนขาย">ส่วนขาย</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -231,7 +239,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content shadow-lg">
                 <div class="modal-header border-0 pt-4 px-4">
-                    <h5 class="fw-bold m-0 text-success"><i class="fa-solid fa-user-plus me-2"></i>เพิ่มผู้ดูแลระบบใหม่</h5>
+                    <h5 class="fw-bold m-0 text-success"><i class="fa-solid fa-user-plus me-2"></i>เพิ่มบัญชีผู้ใช้งานใหม่</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <form action="/add_user" method="POST">
@@ -259,7 +267,6 @@
         let currentRoom = 'all';
 
         function switchSection(section, btn) {
-            // เคลียร์ class active ออกจากทุกปุ่มก่อน
             document.querySelectorAll(".nav-link").forEach(b => b.classList.remove("active"));
             
             if (section === 'user') {
@@ -273,7 +280,6 @@
                 document.querySelector('.booking-controls').style.display = 'block';
                 document.querySelector('.user-section').style.display = 'none';
                 document.querySelector('.user-controls').style.display = 'none';
-                // ถ้ากดกลับมาหน้าจอง ให้ไปไฮไลท์ที่ "รายการจองทั้งหมด" เป็นค่าเริ่มต้น
                 if(!btn || btn.id === 'btn-user-manage') {
                     document.getElementById('btn-booking-all').classList.add("active");
                 } else {
@@ -298,7 +304,6 @@
                 });
             }
 
-            // สร้างปุ่ม Zoom Room
             const rows = document.querySelectorAll(".booking-row");
             const rooms = new Set();
             rows.forEach(row => {
@@ -367,7 +372,7 @@
 
         function confirmDeleteUser(id, username) {
             Swal.fire({
-                title: 'ลบ Admin?',
+                title: 'ลบบัญชีผู้ใช้?',
                 text: `ลบชื่อผู้ใช้งาน ${username}?`,
                 icon: 'error',
                 showCancelButton: true,
