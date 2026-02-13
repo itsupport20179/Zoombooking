@@ -205,6 +205,11 @@
                                 <option value="ส่วนบัญชี">ส่วนบัญชี</option>
                                 <option value="ส่วนธุรการ">ส่วนธุรการ</option>
                                 <option value="ส่วนขาย">ส่วนขาย</option>
+                                <option value="ส่วนการตลาด">ส่วนการตลาด</option>
+                                <option value="ส่วนทรัพยากรบุคคล">ส่วนทรัพยากรบุคคล</option>
+                                <option value="ส่วนผลิต">ส่วนผลิต</option>
+                                <option value="ส่วนคลังสินค้า">ส่วนคลังสินค้า</option>
+                                <option value="ส่วนขนส่ง">ส่วนขนส่ง</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -291,7 +296,7 @@
                             <label class="form-label small fw-bold text-muted">Password ใหม่ (ปล่อยว่างถ้าไม่ต้องการเปลี่ยน)</label>
                             <input type="password" name="password" class="form-control rounded-3" placeholder="กรอกรหัสใหม่เพื่อเปลี่ยน">
                         </div>
-                        <p class="small text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i> หากเปลี่ยนรหัสผ่าน เครื่องอื่นที่ล็อกอินชื่อนี้อยู่จะถูกเตะออกทันที</p>
+                        <p class="small text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i> หากเปลี่ยนรหัสผ่าน เครื่องอื่นที่ล็อกอินชื่อนี้อยู่จะต้องเข้าสู่ระบบใหม่เพื่อความปลอดภัย</p>
                     </div>
                     <div class="modal-footer border-0 pb-4 px-4">
                         <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">ยกเลิก</button>
@@ -358,7 +363,7 @@
             sortedRooms.forEach(room => {
                 const btn = document.createElement("button");
                 btn.type = "button";
-                btn.id = "btn-room-" + room; // เพิ่ม ID เพื่อให้สคริปต์หาปุ่มเจอ
+                btn.id = "btn-room-" + room;
                 btn.className = "nav-link";
                 btn.innerHTML = `Zoom ${room}`;
                 btn.onclick = function() { 
@@ -368,14 +373,13 @@
                 tabContainer.appendChild(btn);
             });
 
-            // 3. ระบบจำ Tab (เช็คจาก URL Parameter "tab")
+            // 3. ระบบจำ Tab
             const urlParams = new URLSearchParams(window.location.search);
             const targetTab = urlParams.get('tab');
 
             if (targetTab === 'user') {
                 switchSection('user', document.getElementById('btn-user-manage'));
             } else if (targetTab && targetTab !== 'all') {
-                // รอให้ปุ่มถูกสร้างเสร็จแล้วคลิก
                 setTimeout(() => {
                     const roomBtn = document.getElementById('btn-room-' + targetTab);
                     if (roomBtn) roomBtn.click();
@@ -383,7 +387,6 @@
             }
         };
 
-        // กรองข้อมูล Booking
         function filterData(roomNum, btn) {
             if (roomNum !== undefined) {
                 currentRoom = roomNum;
@@ -401,13 +404,15 @@
             });
         }
 
-        // กรองข้อมูล User (เพิ่มใหม่)
         function filterUser() {
             const input = document.getElementById("searchUserInput").value.toLowerCase();
             const rows = document.querySelectorAll(".user-row");
             rows.forEach(row => {
-                const username = row.querySelector("td:nth-child(2)").innerText.toLowerCase();
-                row.style.display = username.includes(input) ? "" : "none";
+                const usernameElement = row.querySelector("td:nth-child(2)");
+                if (usernameElement) {
+                    const username = usernameElement.innerText.toLowerCase();
+                    row.style.display = username.includes(input) ? "" : "none";
+                }
             });
         }
 
@@ -423,7 +428,6 @@
             new bootstrap.Modal(document.getElementById('editModal')).show();
         }
 
-        // เปิด Modal แก้ไข User (เพิ่มใหม่)
         function openEditUserModal(id, username) {
             document.getElementById('editUserForm').action = '/edit_user/' + id;
             document.getElementById('edit_u_username').value = username;
@@ -433,11 +437,11 @@
         function confirmDelete(id, name) {
             Swal.fire({
                 title: 'ยืนยันการลบ?',
-                text: `ลบรายการจองของ ${name}?`,
+                text: `ต้องการลบรายการจองของ ${name} ใช่หรือไม่?`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#ef4444',
-                confirmButtonText: 'ลบเลย',
+                confirmButtonText: 'ลบข้อมูล',
                 cancelButtonText: 'ยกเลิก'
             }).then((result) => {
                 if (result.isConfirmed) window.location.href = `/delete/${id}`;
@@ -447,10 +451,10 @@
         function confirmDeleteUser(id, username) {
             Swal.fire({
                 title: 'ลบบัญชีผู้ใช้?',
-                text: `ลบชื่อผู้ใช้งาน ${username}?`,
+                text: `ต้องการลบชื่อผู้ใช้งาน ${username} ออกจากระบบใช่หรือไม่?`,
                 icon: 'error',
                 showCancelButton: true,
-                confirmButtonText: 'ลบเลย',
+                confirmButtonText: 'ลบบัญชี',
                 cancelButtonText: 'ยกเลิก'
             }).then((result) => {
                 if (result.isConfirmed) window.location.href = `/delete_user/${id}`;
