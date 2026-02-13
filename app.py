@@ -54,6 +54,19 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# เพิ่ม Middleware เช็คสิทธิ์ Admin โดยเฉพาะ
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session:
+            return redirect(url_for('login'))
+        user = db.session.get(User, session['user_id'])
+        if not user or user.role != 'admin':
+            flash('เฉพาะผู้ดูแลระบบเท่านั้นที่สามารถเข้าถึงหน้านี้ได้', 'danger')
+            return redirect(url_for('index'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 # --- Routes ---
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -133,37 +146,31 @@ def book():
 # --- Admin Section (จัดการ Booking และ User ในหน้าเดียว) ---
 
 @app.route('/admin')
-@login_required
+@admin_required # เปลี่ยนมาใช้ admin_required เพื่อความปลอดภัยสูงสุด
 def admin_panel():
-    if session.get('role') != 'admin': 
-        return "Access Denied", 403
-    
     bookings = Booking.query.order_by(Booking.date.desc(), Booking.start_time.asc()).all()
-    users = User.query.all() # ดึง User ไปแสดงในหน้า admin.html
+    users = User.query.all() 
     return render_template('admin.html', bookings=bookings, users=users)
 
 @app.route('/add_user', methods=['POST'])
-@login_required
+@admin_required
 def add_user():
-    if session.get('role') != 'admin': return "Unauthorized", 401
-    
     u = request.form.get('username')
     p = request.form.get('password')
     
     if User.query.filter_by(username=u).first():
         flash('ชื่อผู้ใช้นี้มีอยู่ในระบบแล้ว', 'danger')
     else:
-        new_user = User(username=u, password=generate_password_hash(p), role='admin')
+        # แก้ไขตรงนี้: กำหนด role='user' สำหรับ account ใหม่ตามที่มึงต้องการ
+        new_user = User(username=u, password=generate_password_hash(p), role='user')
         db.session.add(new_user)
         db.session.commit()
-        flash(f'เพิ่มผู้ดูแลระบบ {u} สำเร็จ!', 'success')
+        flash(f'เพิ่มผู้ใช้งาน {u} สำเร็จ! (สิทธิ์: User)', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/delete_user/<int:id>')
-@login_required
+@admin_required
 def delete_user(id):
-    if session.get('role') != 'admin': return "Unauthorized", 401
-    
     user = db.session.get(User, id)
     if user:
         if user.username == session['username']:
@@ -177,9 +184,8 @@ def delete_user(id):
 # --- Booking Management ---
 
 @app.route('/delete/<int:id>')
-@login_required
+@admin_required
 def delete_booking(id):
-    if session.get('role') != 'admin': return "Unauthorized", 401
     booking = db.session.get(Booking, id)
     if booking: 
         db.session.delete(booking)
@@ -188,9 +194,8 @@ def delete_booking(id):
     return redirect(url_for('admin_panel'))
 
 @app.route('/edit_booking/<int:id>', methods=['POST'])
-@login_required
+@admin_required
 def edit_booking(id):
-    if session.get('role') != 'admin': return "Unauthorized", 401
     booking = db.session.get(Booking, id)
     if not booking: return redirect(url_for('admin_panel'))
     
