@@ -29,8 +29,6 @@
         .btn-edit:hover { background: var(--accent-color); color: white; }
         .btn-back { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; }
         .modal-content { border-radius: 25px; border: none; box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
-        
-        /* --- กูเพิ่ม CSS สำหรับจัดการ User ตรงนี้ --- */
         .user-section { display: none; }
         .btn-add-user { background: #10b981; color: white; border: none; border-radius: 12px; padding: 10px 20px; font-weight: 600; }
         .btn-add-user:hover { background: #059669; color: white; }
@@ -51,7 +49,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h3 class="fw-bold m-0"><i class="fa-solid fa-gears me-2"></i>Admin Panel</h3>
-                    <p class="m-0 opacity-75 small">จัดการรายการจองแยกตามห้องและค้นหาชื่อผู้จอง</p>
+                    <p class="m-0 opacity-75 small">จัดการรายการจองและผู้ใช้งานในหน้าเดียว</p>
                 </div>
                 <div class="text-end">
                     <a href="/" class="btn btn-back btn-sm rounded-pill px-4">
@@ -65,12 +63,16 @@
     <div class="container mt-5 pt-3">
         <div class="row mb-4 align-items-center">
             <div class="col-md-8">
-                <ul class="nav nav-tabs" id="dynamicRoomTabs">
+                <ul class="nav nav-tabs">
                     <li class="nav-item">
-                        <button class="nav-link active" onclick="switchSection('booking'); filterData('all', this)">รายการจองทั้งหมด</button>
+                        <button type="button" class="nav-link active" id="btn-booking-all" onclick="switchSection('booking'); filterData('all', this)">รายการจองทั้งหมด</button>
                     </li>
-                    <li class="nav-item">
-                        <button class="nav-link" onclick="switchSection('user', this)"><i class="fa-solid fa-users-gear me-1"></i>จัดการผู้ใช้งาน</button>
+                    <div id="dynamicRoomTabs" class="d-flex gap-2 mx-2"></div>
+                    
+                    <li class="nav-item ms-auto">
+                        <button type="button" class="nav-link" id="btn-user-manage" onclick="switchSection('user', this)">
+                            <i class="fa-solid fa-users-gear me-1"></i>จัดการผู้ใช้งาน
+                        </button>
                     </li>
                 </ul>
             </div>
@@ -106,13 +108,11 @@
                             <td class="fw-bold text-dark">{{b.date}}</td>
                             <td><span class="badge badge-time rounded-pill px-3 py-2">{{b.start_time}} - {{b.end_time}} น.</span></td>
                             <td><span class="badge badge-room rounded-pill px-3 py-2">Zoom {{b.room}}</span></td>
-                            <td class="search-target">
+                            <td>
                                 <div class="fw-bold text-dark">{{b.name}}</div>
                                 <div class="small text-muted">{{b.department}}</div>
                             </td>
-                            <td class="search-target">
-                                <span class="fw-bold text-dark">{{b.requester_name}}</span>
-                            </td>
+                            <td><span class="fw-bold text-dark">{{b.requester_name}}</span></td>
                             <td class="text-end">
                                 <button type="button" class="btn btn-sm btn-edit rounded-pill px-3 me-1" 
                                     onclick="openEditModal('{{ b.id }}', '{{ b.requester_name }}', '{{ b.department }}', '{{ b.name }}', '{{ b.room }}', '{{ b.date }}', '{{ b.start_time }}', '{{ b.end_time }}')">
@@ -135,7 +135,7 @@
                     <thead>
                         <tr>
                             <th>ลำดับ</th>
-                            <th>ชื่อผู้ใช้งาน (Username)</th>
+                            <th>Username</th>
                             <th>สถานะ</th>
                             <th class="text-end">Action</th>
                         </tr>
@@ -148,7 +148,7 @@
                                 <td class="fw-bold text-dark">{{ u.username }}</td>
                                 <td><span class="badge bg-success rounded-pill px-3">Active Admin</span></td>
                                 <td class="text-end">
-                                    {% if session.get('user_id') != u.id %}
+                                    {% if session.get('user_id')|int != u.id|int %}
                                     <button class="btn btn-sm btn-delete rounded-pill px-3" onclick="confirmDeleteUser('{{ u.id }}', '{{ u.username }}')">
                                         <i class="fa-solid fa-user-minus"></i> ลบสิทธิ์
                                     </button>
@@ -185,7 +185,7 @@
                             <select name="department" id="edit_dept" class="form-select rounded-3" required>
                                 <option value="ส่วนเทคโนโลยีสารสนเทศ">ส่วนเทคโนโลยีสารสนเทศ</option>
                                 <option value="ส่วนบัญชี">ส่วนบัญชี</option>
-                                </select>
+                            </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-muted">หัวข้อการประชุม</label>
@@ -195,12 +195,11 @@
                             <div class="col-6 mb-3">
                                 <label class="form-label small fw-bold text-muted">ห้อง</label>
                                 <select name="room" id="edit_room" class="form-select rounded-3">
-                                    <option value="Room 1">Zoom Room 1</option>
-                                    <option value="Room 2">Zoom Room 2</option>
-                                    <option value="Room 3">Zoom Room 3</option>
-                                    <option value="Room 4">Zoom Room 4</option>
-                                    <option value="Room 5">Zoom Room 5</option>
-                                    <option value="อื่นๆ">อื่นๆ</option>
+                                    <option value="1">Zoom Room 1</option>
+                                    <option value="2">Zoom Room 2</option>
+                                    <option value="3">Zoom Room 3</option>
+                                    <option value="4">Zoom Room 4</option>
+                                    <option value="5">Zoom Room 5</option>
                                 </select>
                             </div>
                             <div class="col-6 mb-3">
@@ -259,21 +258,27 @@
     <script>
         let currentRoom = 'all';
 
-        // ฟังก์ชันใหม่: สลับหน้าจอระหว่าง Booking กับ User
         function switchSection(section, btn) {
+            // เคลียร์ class active ออกจากทุกปุ่มก่อน
+            document.querySelectorAll(".nav-link").forEach(b => b.classList.remove("active"));
+            
             if (section === 'user') {
                 document.querySelector('.booking-section').style.display = 'none';
                 document.querySelector('.booking-controls').style.display = 'none';
                 document.querySelector('.user-section').style.display = 'block';
                 document.querySelector('.user-controls').style.display = 'block';
-                
-                document.querySelectorAll(".nav-link").forEach(b => b.classList.remove("active"));
-                btn.classList.add("active");
+                document.getElementById('btn-user-manage').classList.add("active");
             } else {
                 document.querySelector('.booking-section').style.display = 'block';
                 document.querySelector('.booking-controls').style.display = 'block';
                 document.querySelector('.user-section').style.display = 'none';
                 document.querySelector('.user-controls').style.display = 'none';
+                // ถ้ากดกลับมาหน้าจอง ให้ไปไฮไลท์ที่ "รายการจองทั้งหมด" เป็นค่าเริ่มต้น
+                if(!btn || btn.id === 'btn-user-manage') {
+                    document.getElementById('btn-booking-all').classList.add("active");
+                } else {
+                    btn.classList.add("active");
+                }
             }
         }
 
@@ -293,7 +298,7 @@
                 });
             }
 
-            // ของเดิมมึง: สร้าง Tab ห้องประชุม
+            // สร้างปุ่ม Zoom Room
             const rows = document.querySelectorAll(".booking-row");
             const rooms = new Set();
             rows.forEach(row => {
@@ -305,59 +310,17 @@
             const tabContainer = document.getElementById("dynamicRoomTabs");
 
             sortedRooms.forEach(room => {
-                const li = document.createElement("li");
-                li.className = "nav-item";
-                li.innerHTML = `<button class="nav-link" onclick="switchSection('booking'); filterData('${room}', this)">Zoom ${room}</button>`;
-                tabContainer.appendChild(li);
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "nav-link";
+                btn.innerHTML = `Zoom ${room}`;
+                btn.onclick = function() { 
+                    switchSection('booking', this); 
+                    filterData(room, this); 
+                };
+                tabContainer.appendChild(btn);
             });
         };
-
-        function openEditModal(id, req, dept, topic, room, date, start, end) {
-            document.getElementById('editForm').action = '/edit_booking/' + id;
-            document.getElementById('edit_requester').value = req;
-            document.getElementById('edit_dept').value = dept;
-            document.getElementById('edit_topic').value = topic;
-            document.getElementById('edit_room').value = room;
-            document.getElementById('edit_date').value = date;
-            document.getElementById('edit_start').value = start;
-            document.getElementById('edit_end').value = end;
-            
-            new bootstrap.Modal(document.getElementById('editModal')).show();
-        }
-
-        function confirmDelete(id, name) {
-            Swal.fire({
-                title: 'ยืนยันการลบ?',
-                text: `คุณต้องการลบรายการจองของ ${name} ใช่หรือไม่?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#ef4444',
-                cancelButtonColor: '#64748b',
-                confirmButtonText: 'ใช่, ลบเลย!',
-                cancelButtonText: 'ยกเลิก',
-                reverseButtons: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = `/delete/${id}`;
-                }
-            })
-        }
-
-        // ฟังก์ชันใหม่: ยืนยันลบ User
-        function confirmDeleteUser(id, username) {
-            Swal.fire({
-                title: 'ลบสิทธิ์ Admin?',
-                text: `คุณต้องการลบชื่อผู้ใช้งาน ${username} ออกจากระบบใช่หรือไม่?`,
-                icon: 'error',
-                showCancelButton: true,
-                confirmButtonText: 'ยืนยัน ลบเลย!',
-                cancelButtonText: 'ยกเลิก'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = `/delete_user/${id}`;
-                }
-            })
-        }
 
         function filterData(roomNum, btn) {
             if (roomNum !== undefined) {
@@ -373,6 +336,45 @@
                 const matchRoom = (currentRoom === 'all' || rowRoom === currentRoom);
                 const matchSearch = rowText.includes(searchInput);
                 row.style.display = (matchRoom && matchSearch) ? "" : "none";
+            });
+        }
+
+        function openEditModal(id, req, dept, topic, room, date, start, end) {
+            document.getElementById('editForm').action = '/edit_booking/' + id;
+            document.getElementById('edit_requester').value = req;
+            document.getElementById('edit_dept').value = dept;
+            document.getElementById('edit_topic').value = topic;
+            document.getElementById('edit_room').value = room;
+            document.getElementById('edit_date').value = date;
+            document.getElementById('edit_start').value = start;
+            document.getElementById('edit_end').value = end;
+            new bootstrap.Modal(document.getElementById('editModal')).show();
+        }
+
+        function confirmDelete(id, name) {
+            Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: `ลบรายการจองของ ${name}?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'ลบเลย',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) window.location.href = `/delete/${id}`;
+            });
+        }
+
+        function confirmDeleteUser(id, username) {
+            Swal.fire({
+                title: 'ลบ Admin?',
+                text: `ลบชื่อผู้ใช้งาน ${username}?`,
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonText: 'ลบเลย',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) window.location.href = `/delete_user/${id}`;
             });
         }
     </script>
