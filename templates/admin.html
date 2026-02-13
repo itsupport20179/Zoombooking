@@ -201,6 +201,7 @@
                         <div class="mb-3">
                             <label class="form-label small fw-bold text-muted">แผนก</label>
                             <select name="department" id="edit_dept" class="form-select rounded-3" required>
+                                <option value="">-- เลือกแผนก --</option>
                                 <option value="ส่วนเทคโนโลยีสารสนเทศ">ส่วนเทคโนโลยีสารสนเทศ</option>
                                 <option value="ส่วนบัญชี">ส่วนบัญชี</option>
                                 <option value="ส่วนธุรการ">ส่วนธุรการ</option>
@@ -334,7 +335,6 @@
         }
 
         window.onload = function() {
-            // 1. ระบบแจ้งเตือน (SweetAlert)
             const body = document.body;
             const cat = body.getAttribute('data-flash-cat');
             const msg = body.getAttribute('data-flash-msg');
@@ -349,7 +349,6 @@
                 });
             }
 
-            // 2. สร้างปุ่ม Zoom Room
             const rows = document.querySelectorAll(".booking-row");
             const rooms = new Set();
             rows.forEach(row => {
@@ -373,7 +372,6 @@
                 tabContainer.appendChild(btn);
             });
 
-            // 3. ระบบจำ Tab
             const urlParams = new URLSearchParams(window.location.search);
             const targetTab = urlParams.get('tab');
 
@@ -391,7 +389,7 @@
             if (roomNum !== undefined) {
                 currentRoom = roomNum;
                 document.querySelectorAll(".nav-link").forEach(b => b.classList.remove("active"));
-                btn.classList.add("active");
+                if(btn) btn.classList.add("active");
             }
             const searchInput = document.getElementById("searchInput").value.toLowerCase();
             const rows = document.querySelectorAll(".booking-row");
@@ -419,9 +417,22 @@
         function openEditModal(id, req, dept, topic, room, date, start, end) {
             document.getElementById('editForm').action = '/edit_booking/' + id;
             document.getElementById('edit_requester').value = req;
-            document.getElementById('edit_dept').value = dept;
+            
+            // ตรวจสอบแผนก
+            let deptSelect = document.getElementById('edit_dept');
+            let deptExists = Array.from(deptSelect.options).some(opt => opt.value === dept);
+            if (!deptExists && dept && dept !== 'None') {
+                let newOpt = new Option(dept, dept);
+                deptSelect.add(newOpt);
+            }
+            deptSelect.value = dept;
+
             document.getElementById('edit_topic').value = topic;
-            document.getElementById('edit_room').value = room;
+            
+            // จัดการเรื่องเลขห้องให้ตรงกับ value ใน select
+            let roomValue = room.toString().replace('Zoom ', '').trim();
+            document.getElementById('edit_room').value = roomValue;
+
             document.getElementById('edit_date').value = date;
             document.getElementById('edit_start').value = start;
             document.getElementById('edit_end').value = end;
