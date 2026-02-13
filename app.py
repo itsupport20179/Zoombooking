@@ -227,11 +227,13 @@ def edit_booking(id):
     start = request.form.get('start_time')
     end = request.form.get('end_time')
     
+    # ตรวจสอบการทับซ้อน (ยกเว้น ID ของตัวเอง)
     conflict = Booking.query.filter_by(date=date, room=room).filter((Booking.id != id) & (Booking.start_time < end) & (Booking.end_time > start)).first()
     
     if conflict: 
         flash('ไม่สามารถแก้ไขได้ เนื่องจากช่วงเวลาทับซ้อนกับการจองอื่น', 'danger')
-        return redirect(url_for('admin_panel', tab=booking.room))
+        # ส่งกลับไปยังห้องที่มีปัญหา
+        return redirect(url_for('admin_panel', tab=room))
     else:
         booking.requester_name = req_name
         booking.department = dept
