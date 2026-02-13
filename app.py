@@ -54,7 +54,6 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# เพิ่ม Middleware เช็คสิทธิ์ Admin โดยเฉพาะ
 def admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -74,7 +73,6 @@ def login():
     if request.method == 'POST':
         user = User.query.filter_by(username=request.form['username']).first()
         if user and check_password_hash(user.password, request.form['password']):
-            # สร้าง Session ใหม่ทับของเดิม (Force Logout เครื่องอื่น)
             new_session_id = str(uuid.uuid4())
             user.current_session_id = new_session_id
             db.session.commit()
@@ -84,7 +82,7 @@ def login():
             session['role'] = user.role
             session['session_id'] = new_session_id 
             return redirect(url_for('index'))
-        flash('Username หรือ Password ไม่ถูกต้อง', 'danger')
+        flash('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'danger')
     return render_template('login.html')
 
 @app.route('/logout')
@@ -143,8 +141,6 @@ def book():
         flash('เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'danger')
     return redirect(url_for('index'))
 
-# --- Admin Section (จัดการ Booking และ User ในหน้าเดียว) ---
-
 @app.route('/admin')
 @admin_required
 def admin_panel():
@@ -160,13 +156,13 @@ def add_user():
     
     if User.query.filter_by(username=u).first():
         flash('ชื่อผู้ใช้นี้มีอยู่ในระบบแล้ว', 'danger')
-        return redirect(url_for('admin_panel', tab='user')) # เด้งกลับ Tab User
+        return redirect(url_for('admin_panel', tab='user'))
     else:
         new_user = User(username=u, password=generate_password_hash(p), role='user')
         db.session.add(new_user)
         db.session.commit()
-        flash(f'เพิ่มผู้ใช้งาน {u} สำเร็จ! (สิทธิ์: User)', 'success')
-    return redirect(url_for('admin_panel', tab='user')) # เด้งกลับ Tab User
+        flash(f'เพิ่มผู้ใช้งาน {u} สำเร็จ!', 'success')
+    return redirect(url_for('admin_panel', tab='user'))
 
 @app.route('/edit_user/<int:id>', methods=['POST'])
 @admin_required
@@ -179,20 +175,18 @@ def edit_user(id):
     new_username = request.form.get('username')
     new_password = request.form.get('password')
     
-    # เช็คชื่อซ้ำถ้าเปลี่ยนชื่อใหม่
     if new_username != user.username:
         if User.query.filter_by(username=new_username).first():
-            flash('ชื่อผู้ใช้นี้มีคนใช้แล้วสัส!', 'danger')
+            flash('ชื่อผู้ใช้นี้มีผู้ใช้งานแล้ว', 'danger')
             return redirect(url_for('admin_panel', tab='user'))
         user.username = new_username
     
-    # ถ้ากรอก Password มาใหม่ค่อยเปลี่ยน และ Force Logout เพื่อความปลอดภัย
     if new_password:
         user.password = generate_password_hash(new_password)
         user.current_session_id = str(uuid.uuid4()) 
         
     db.session.commit()
-    flash(f'แก้ไขข้อมูล {user.username} เรียบร้อย!', 'success')
+    flash(f'แก้ไขข้อมูล {user.username} เรียบร้อยแล้ว', 'success')
     return redirect(url_for('admin_panel', tab='user'))
 
 @app.route('/delete_user/<int:id>')
@@ -201,20 +195,18 @@ def delete_user(id):
     user = db.session.get(User, id)
     if user:
         if user.username == session['username']:
-            flash('ไม่สามารถลบตัวเองได้สัส!', 'danger')
+            flash('ไม่สามารถลบชื่อผู้ใช้ที่กำลังใช้งานอยู่ได้', 'danger')
         else:
             db.session.delete(user)
             db.session.commit()
-            flash('ลบผู้ใช้งานเรียบร้อย!', 'success')
-    return redirect(url_for('admin_panel', tab='user')) # เด้งกลับ Tab User
-
-# --- Booking Management ---
+            flash('ลบผู้ใช้งานเรียบร้อยแล้ว', 'success')
+    return redirect(url_for('admin_panel', tab='user'))
 
 @app.route('/delete/<int:id>')
 @admin_required
 def delete_booking(id):
     booking = db.session.get(Booking, id)
-    target_tab = booking.room if booking else 'all' # เก็บห้องไว้เปิด Tab เดิม
+    target_tab = booking.room if booking else 'all'
     if booking: 
         db.session.delete(booking)
         db.session.commit()
@@ -238,7 +230,7 @@ def edit_booking(id):
     conflict = Booking.query.filter_by(date=date, room=room).filter((Booking.id != id) & (Booking.start_time < end) & (Booking.end_time > start)).first()
     
     if conflict: 
-        flash('ไม่สามารถแก้ไขได้ เนื่องจากเวลาทับซ้อนกับการจองอื่น', 'danger')
+        flash('ไม่สามารถแก้ไขได้ เนื่องจากช่วงเวลาทับซ้อนกับการจองอื่น', 'danger')
         return redirect(url_for('admin_panel', tab=booking.room))
     else:
         booking.requester_name = req_name
@@ -249,8 +241,8 @@ def edit_booking(id):
         booking.start_time = start
         booking.end_time = end
         db.session.commit()
-        flash('แก้ไขข้อมูลสำเร็จ!', 'success')
-    return redirect(url_for('admin_panel', tab=room)) # เด้งกลับหน้าห้องที่แก้ใหม่
+        flash('แก้ไขข้อมูลเรียบร้อยแล้ว', 'success')
+    return redirect(url_for('admin_panel', tab=room))
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
