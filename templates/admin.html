@@ -76,16 +76,24 @@
                     </li>
                 </ul>
             </div>
+            
             <div class="col-md-4 booking-controls">
                 <div class="search-container">
                     <i class="fa-solid fa-magnifying-glass search-icon"></i>
                     <input type="text" id="searchInput" class="form-control search-input" placeholder="ค้นหาชื่อผู้จอง..." onkeyup="filterData()">
                 </div>
             </div>
+
             <div class="col-md-4 user-controls text-end" style="display: none;">
-                <button class="btn btn-add-user shadow-sm" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                    <i class="fa-solid fa-user-plus me-2"></i>เพิ่มผู้ใช้งานใหม่
-                </button>
+                <div class="d-flex gap-2">
+                    <div class="search-container flex-grow-1">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="searchUserInput" class="form-control search-input" placeholder="ค้นหาชื่อผู้ใช้..." onkeyup="filterUser()">
+                    </div>
+                    <button class="btn btn-add-user shadow-sm text-nowrap" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <i class="fa-solid fa-user-plus me-2"></i>เพิ่มบัญชี
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -131,7 +139,7 @@
 
         <div class="card border-0 mb-5 user-section">
             <div class="table-responsive">
-                <table class="table mb-0">
+                <table class="table mb-0" id="userTable">
                     <thead>
                         <tr>
                             <th>ลำดับ</th>
@@ -143,7 +151,7 @@
                     <tbody>
                         {% if users %}
                             {% for u in users %}
-                            <tr>
+                            <tr class="user-row">
                                 <td class="text-muted">{{ loop.index }}</td>
                                 <td class="fw-bold text-dark">{{ u.username }}</td>
                                 <td>
@@ -154,6 +162,10 @@
                                     {% endif %}
                                 </td>
                                 <td class="text-end">
+                                    <button class="btn btn-sm btn-edit rounded-pill px-3 me-1" 
+                                            onclick="openEditUserModal('{{ u.id }}', '{{ u.username }}')">
+                                        <i class="fa-solid fa-user-pen"></i> แก้ไข
+                                    </button>
                                     {% if session.get('user_id')|int != u.id|int %}
                                     <button class="btn btn-sm btn-delete rounded-pill px-3" onclick="confirmDeleteUser('{{ u.id }}', '{{ u.username }}')">
                                         <i class="fa-solid fa-user-minus"></i> ลบผู้ใช้
@@ -262,6 +274,34 @@
         </div>
     </div>
 
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="fw-bold m-0 text-primary"><i class="fa-solid fa-user-pen me-2"></i>แก้ไขข้อมูลผู้ใช้งาน</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editUserForm" method="POST">
+                    <div class="modal-body px-4">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Username</label>
+                            <input type="text" name="username" id="edit_u_username" class="form-control rounded-3" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Password ใหม่ (ปล่อยว่างถ้าไม่ต้องการเปลี่ยน)</label>
+                            <input type="password" name="password" class="form-control rounded-3" placeholder="กรอกรหัสใหม่เพื่อเปลี่ยน">
+                        </div>
+                        <p class="small text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i> หากเปลี่ยนรหัสผ่าน เครื่องอื่นที่ล็อกอินชื่อนี้อยู่จะถูกเตะออกทันที</p>
+                    </div>
+                    <div class="modal-footer border-0 pb-4 px-4">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4">บันทึกการแก้ไข</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         let currentRoom = 'all';
@@ -289,10 +329,10 @@
         }
 
         window.onload = function() {
+            // 1. ระบบแจ้งเตือน (SweetAlert)
             const body = document.body;
             const cat = body.getAttribute('data-flash-cat');
             const msg = body.getAttribute('data-flash-msg');
-            
             if (cat && msg) {
                 Swal.fire({
                     icon: cat === 'success' ? 'success' : 'error',
@@ -304,6 +344,7 @@
                 });
             }
 
+            // 2. สร้างปุ่ม Zoom Room
             const rows = document.querySelectorAll(".booking-row");
             const rooms = new Set();
             rows.forEach(row => {
@@ -317,6 +358,7 @@
             sortedRooms.forEach(room => {
                 const btn = document.createElement("button");
                 btn.type = "button";
+                btn.id = "btn-room-" + room; // เพิ่ม ID เพื่อให้สคริปต์หาปุ่มเจอ
                 btn.className = "nav-link";
                 btn.innerHTML = `Zoom ${room}`;
                 btn.onclick = function() { 
@@ -325,8 +367,23 @@
                 };
                 tabContainer.appendChild(btn);
             });
+
+            // 3. ระบบจำ Tab (เช็คจาก URL Parameter "tab")
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetTab = urlParams.get('tab');
+
+            if (targetTab === 'user') {
+                switchSection('user', document.getElementById('btn-user-manage'));
+            } else if (targetTab && targetTab !== 'all') {
+                // รอให้ปุ่มถูกสร้างเสร็จแล้วคลิก
+                setTimeout(() => {
+                    const roomBtn = document.getElementById('btn-room-' + targetTab);
+                    if (roomBtn) roomBtn.click();
+                }, 100);
+            }
         };
 
+        // กรองข้อมูล Booking
         function filterData(roomNum, btn) {
             if (roomNum !== undefined) {
                 currentRoom = roomNum;
@@ -344,6 +401,16 @@
             });
         }
 
+        // กรองข้อมูล User (เพิ่มใหม่)
+        function filterUser() {
+            const input = document.getElementById("searchUserInput").value.toLowerCase();
+            const rows = document.querySelectorAll(".user-row");
+            rows.forEach(row => {
+                const username = row.querySelector("td:nth-child(2)").innerText.toLowerCase();
+                row.style.display = username.includes(input) ? "" : "none";
+            });
+        }
+
         function openEditModal(id, req, dept, topic, room, date, start, end) {
             document.getElementById('editForm').action = '/edit_booking/' + id;
             document.getElementById('edit_requester').value = req;
@@ -354,6 +421,13 @@
             document.getElementById('edit_start').value = start;
             document.getElementById('edit_end').value = end;
             new bootstrap.Modal(document.getElementById('editModal')).show();
+        }
+
+        // เปิด Modal แก้ไข User (เพิ่มใหม่)
+        function openEditUserModal(id, username) {
+            document.getElementById('editUserForm').action = '/edit_user/' + id;
+            document.getElementById('edit_u_username').value = username;
+            new bootstrap.Modal(document.getElementById('editUserModal')).show();
         }
 
         function confirmDelete(id, name) {
@@ -385,4 +459,3 @@
     </script>
 </body>
 </html>
-
