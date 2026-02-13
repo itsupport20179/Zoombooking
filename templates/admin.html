@@ -430,7 +430,7 @@
             document.getElementById('edit_topic').value = topic;
             
             // จัดการเรื่องเลขห้องให้ตรงกับ value ใน select
-            let roomValue = room.toString().replace('Zoom ', '').trim();
+            let roomValue = room.toString().replace('Zoom ', '').replace('ห้อง ', '').trim();
             document.getElementById('edit_room').value = roomValue;
 
             document.getElementById('edit_date').value = date;
@@ -474,3 +474,4 @@
     </script>
 </body>
 </html>
+
