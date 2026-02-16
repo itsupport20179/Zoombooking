@@ -37,7 +37,7 @@ with app.app_context():
     db.create_all()
     # สร้าง Admin ตัวแรกถ้ายังไม่มี
     if not User.query.filter_by(username='admin').first():
-        db.session.add(User(username='admin', password=generate_password_hash('admin1234'), role='admin'))
+        db.session.add(User(username='admin', password=generate_password_hash('itsupport'), role='admin'))
     db.session.commit()
 
 # --- Middleware ---
