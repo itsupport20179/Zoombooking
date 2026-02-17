@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin | Zoom Booking</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        :root { --primary-color: #0f172a; --accent-color: #2563eb; --bg-body: #f8fafc; }
+        body { font-family: 'Sarabun', sans-serif; background-color: var(--bg-body); color: #1e293b; }
+        .admin-header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white; padding: 40px 0; margin-bottom: -50px; border-radius: 0 0 40px 40px; }
+        .card { border: none; border-radius: 20px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); background: white; overflow: hidden; }
+        .nav-tabs { border: none; margin-bottom: 20px; gap: 10px; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 5px; }
+        .nav-link { border: 1px solid #e2e8f0 !important; color: #64748b; font-weight: 600; padding: 8px 20px; border-radius: 50px !important; white-space: nowrap; background: white; }
+        .nav-link.active { background-color: var(--accent-color) !important; color: white !important; border-color: var(--accent-color) !important; }
+        .search-container { position: relative; }
+        .search-input { border-radius: 12px; padding-left: 40px; border: 1px solid #e2e8f0; height: 45px; }
+        .search-icon { position: absolute; left: 15px; top: 13px; color: #94a3b8; }
+        .table thead th { background: #f1f5f9; padding: 18px 20px; border: none; font-size: 13px; color: #64748b; text-transform: uppercase; }
+        .table tbody td { padding: 18px 20px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        .badge-time { background: #e0e7ff; color: #4338ca; font-weight: 600; border: 1px solid #c7d2fe; }
+        .badge-room { background: #f1f5f9; color: #475569; font-weight: 600; }
+        .btn-delete { color: #ef4444; border: 1px solid #fee2e2; background: #fff; transition: all 0.2s; cursor: pointer; }
+        .btn-delete:hover { background: #ef4444; color: white; }
+        .btn-edit { color: var(--accent-color); border: 1px solid #dbeafe; background: #fff; transition: all 0.2s; cursor: pointer; }
+        .btn-edit:hover { background: var(--accent-color); color: white; }
+        .btn-back { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; }
+        .modal-content { border-radius: 25px; border: none; box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
+        .user-section { display: none; }
+        .btn-add-user { background: #10b981; color: white; border: none; border-radius: 12px; padding: 10px 20px; font-weight: 600; }
+        .btn-add-user:hover { background: #059669; color: white; }
+        .stat-card { border-radius: 15px; padding: 1.5rem; border: 1px solid #f1f5f9; }
+        .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1rem; }
+    </style>
+</head>
+
+<body 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                data-flash-cat="{{ category }}" data-flash-msg="{{ message }}"
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+>
+    <div class="admin-header shadow-sm">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="fw-bold m-0"><i class="fa-solid fa-gears me-2"></i>Admin Panel</h3>
+                    <p class="m-0 opacity-75 small">จัดการรายการจองและผู้ใช้งานในหน้าเดียว</p>
+                </div>
+                <div class="text-end">
+                    <a href="/" class="btn btn-back btn-sm rounded-pill px-4">
+                        <i class="fa-solid fa-house me-2"></i>กลับหน้า Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-5 pt-3">
+        <div class="row mb-4 align-items-center">
+            <div class="col-md-8">
+                <ul class="nav nav-tabs">
+                    <li class="nav-item">
+                        <button type="button" class="nav-link active" id="btn-booking-all" onclick="switchSection('booking'); filterData('all', this)">รายการจองทั้งหมด</button>
+                    </li>
+                    <div id="dynamicRoomTabs" class="d-flex gap-2 mx-2"></div>
+                    
+                    <li class="nav-item ms-auto">
+                        <button type="button" class="nav-link" id="btn-user-manage" onclick="switchSection('user', this)">
+                            <i class="fa-solid fa-users-gear me-1"></i>จัดการผู้ใช้งาน
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="col-md-4 booking-controls">
+                <div class="search-container">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="searchInput" class="form-control search-input" placeholder="ค้นหาชื่อผู้จอง..." onkeyup="filterData()">
+                </div>
+            </div>
+
+            <div class="col-md-4 user-controls text-end" style="display: none;">
+                <div class="d-flex gap-2">
+                    <div class="search-container flex-grow-1">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="searchUserInput" class="form-control search-input" placeholder="ค้นหาชื่อผู้ใช้..." onkeyup="filterUser()">
+                    </div>
+                    <button class="btn btn-add-user shadow-sm text-nowrap" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                        <i class="fa-solid fa-user-plus me-2"></i>เพิ่มบัญชี
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 mb-5 booking-section">
+            <div class="table-responsive">
+                <table class="table mb-0">
+                    <thead>
+                        <tr>
+                            <th>วันที่</th>
+                            <th>เวลา</th>
+                            <th>Zoom Account</th>
+                            <th>หัวข้อ / แผนก</th>
+                            <th>ผู้จอง</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        {% for b in bookings %}
+                        <tr class="booking-row" data-room="{{b.room}}">
+                            <td class="fw-bold text-dark">{{b.date}}</td>
+                            <td><span class="badge badge-time rounded-pill px-3 py-2">{{b.start_time}} - {{b.end_time}} น.</span></td>
+                            <td><span class="badge badge-room rounded-pill px-3 py-2">{{b.room}}</span></td>
+                            <td>
+                                <div class="fw-bold text-dark">{{b.name}}</div>
+                                <div class="small text-muted">{{b.department}}</div>
+                            </td>
+                            <td><span class="fw-bold text-dark">{{b.requester_name}}</span></td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-edit rounded-pill px-3 me-1" 
+                                    onclick="openEditModal('{{ b.id }}', '{{ b.requester_name }}', '{{ b.department }}', '{{ b.name }}', '{{ b.room }}', '{{ b.date }}', '{{ b.start_time }}', '{{ b.end_time }}')">
+                                    <i class="fa-regular fa-pen-to-square"></i> แก้ไข
+                                </button>
+                                <button type="button" class="btn btn-sm btn-delete rounded-pill px-3" onclick="confirmDelete('{{ b.id }}', '{{ b.requester_name }}')">
+                                    <i class="fa-regular fa-trash-can"></i> ลบ
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card border-0 mb-5 user-section">
+            <div class="table-responsive">
+                <table class="table mb-0" id="userTable">
+                    <thead>
+                        <tr>
+                            <th>ลำดับ</th>
+                            <th>Username</th>
+                            <th>สถานะ (Role)</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if users %}
+                            {% for u in users %}
+                            <tr class="user-row">
+                                <td class="text-muted">{{ loop.index }}</td>
+                                <td class="fw-bold text-dark">{{ u.username }}</td>
+                                <td>
+                                    {% if u.role == 'admin' %}
+                                        <span class="badge bg-primary rounded-pill px-3">Administrator</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary rounded-pill px-3">User</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-edit rounded-pill px-3 me-1" 
+                                            onclick="openEditUserModal('{{ u.id }}', '{{ u.username }}')">
+                                        <i class="fa-solid fa-user-pen"></i> แก้ไข
+                                    </button>
+                                    {% if session.get('user_id')|int != u.id|int %}
+                                    <button class="btn btn-sm btn-delete rounded-pill px-3" onclick="confirmDeleteUser('{{ u.id }}', '{{ u.username }}')">
+                                        <i class="fa-solid fa-user-minus"></i> ลบผู้ใช้
+                                    </button>
+                                    {% else %}
+                                    <span class="badge bg-light text-dark border rounded-pill px-3">ตัวคุณเอง</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr><td colspan="4" class="text-center py-4 text-muted">ไม่พบข้อมูลผู้ใช้งาน</td></tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="fw-bold m-0"><i class="fa-solid fa-pen-to-square me-2 text-primary"></i>แก้ไขข้อมูลการจอง</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editForm" method="POST">
+                    <div class="modal-body px-4">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">ชื่อผู้จอง</label>
+                            <input type="text" name="requester_name" id="edit_requester" class="form-control rounded-3" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">แผนก</label>
+                            <select name="department" id="edit_dept" class="form-select rounded-3" required>
+                                <option value="ส่วนบัญชี">ส่วนบัญชี</option>
+                                <option value="สำนักงานสาขา">สำนักงานสาขา</option>
+                                <option value="ส่วนปฏิบัติการทดสอบ">ส่วนปฏิบัติการทดสอบ</option>
+                                <option value="สำนักงานบริการคุณภาพระบบมาตรฐาน">สำนักงานบริการคุณภาพระบบมาตรฐาน</option>
+                                <option value="ส่วนบริการสอบเทียบเครื่องมือ">ส่วนบริการสอบเทียบเครื่องมือ</option>
+                                <option value="ส่วนตรวจประเมินและรับรองระบบ">ส่วนตรวจประเมินและรับรองระบบ</option>
+                                <option value="แผนกประมง">แผนกประมง</option>
+                                <option value="แผนกพืช-ข้าว">แผนกพืช-ข้าว</option>
+                                <option value="แผนกGHPs/HACCP">แผนกGHPs/HACCP</option>
+                                <option value="ส่วนฝึกอบรมและมาตรฐาน">ส่วนฝึกอบรมและมาตรฐาน</option>
+                                <option value="แผนกฝึกอบรมและบริการที่ปรึกษาห้องปฏิบัติการ">แผนกฝึกอบรมและบริการที่ปรึกษาห้องปฏิบัติการ</option>
+                                <option value="แผนกทดสอบความชำนาญห้องปฏิบัติการ">แผนกทดสอบความชำนาญห้องปฏิบัติการ</option>
+                                <option value="แผนกวิชาการและการประกันคุณภาพห้องปฏิบัติการ">แผนกวิชาการและการประกันคุณภาพห้องปฏิบัติการ</option>
+                                <option value="แผนกมาตรฐานสุขาภิบาลอาหาร">แผนกมาตรฐานสุขาภิบาลอาหาร</option>
+                                <option value="สำนักงานพาณิชย์และยุทธศาสตร์">สำนักงานพาณิชย์และยุทธศาสตร์</option>
+                                <option value="ส่วนประสานงานขายและพัฒนาธุรกิจ">ส่วนประสานงานขายและพัฒนาธุรกิจ</option>
+                                <option value="แผนกประสานงานขายและพัฒนาธุรกิจ">แผนกประสานงานขายและพัฒนาธุรกิจ</option>
+                                <option value="แผนกโครงการพิเศษ">แผนกโครงการพิเศษ</option>
+                                <option value="แผนกผู้เชี่ยวชาญด้านการขาย">แผนกผู้เชี่ยวชาญด้านการขาย</option>
+                                <option value="ส่วนสื่อสารธุรกิจองค์กร">ส่วนสื่อสารธุรกิจองค์กร</option>
+                                <option value="ส่วนแผน งบประมาณและการตลาด">ส่วนแผน งบประมาณและการตลาด</option>
+                                <option value="แผนกแผนและงบประมาณ">แผนกแผนและงบประมาณ</option>
+                                <option value="แผนกการตลาด">แผนกการตลาด</option>
+                                <option value="ส่วนการตลาดและประชาสัมพันธ์">ส่วนการตลาดและประชาสัมพันธ์</option>
+                                <option value="แผนกประชาสัมพันธ์">แผนกประชาสัมพันธ์</option>
+                                <option value="ส่วนขายและสนับสนุนการขายกรุงเทพและปริมณฑล">ส่วนขายและสนับสนุนการขายกรุงเทพและปริมณฑล</option>
+                                <option value="ส่วนขายและสนับสนุนการขายภูมิภาค">ส่วนขายและสนับสนุนการขายภูมิภาค</option>
+                                <option value="สำนักงานเทคโนโลยีและวิศวกรรม">สำนักงานเทคโนโลยีและวิศวกรรม</option>
+                                <option value="ส่วนเทคโนโลยีสารสนเทศ">ส่วนเทคโนโลยีสารสนเทศ</option>
+                                <option value="ส่วนเครื่องมือวิทยาศาสตร์">ส่วนเครื่องมือวิทยาศาสตร์</option>
+                                <option value="ส่วนงานอาคารสถานที่">ส่วนงานอาคารสถานที่</option>
+                                <option value="สำนักงานบัญชีและการเงิน">สำนักงานบัญชีและการเงิน</option>
+                                <option value="ส่วนการเงิน">ส่วนการเงิน</option>
+                                <option value="ส่วนจัดซื้อและพัสดุ">ส่วนจัดซื้อและพัสดุ</option>
+                                <option value="สำนักงานกรรมการผู้อำนวยการ">สำนักงานกรรมการผู้อำนวยการ</option>
+                                <option value="ส่วนธุรการและเลขานุการการประชุม">ส่วนธุรการและเลขานุการการประชุม</option>
+                                <option value="แผนกธุรการ">แผนกธุรการ</option>
+                                <option value="แผนกเลขานุการการประชุม">แผนกเลขานุการการประชุม</option>
+                                <option value="ส่วนทรัพยากรบุคคล">ส่วนทรัพยากรบุคคล</option>
+                                <option value="แผนกพัฒนาทรัพยากรบุคคล">แผนกพัฒนาทรัพยากรบุคคล</option>
+                                <option value="แผนกอาชีวอนามัยและความปลอดภัย">แผนกอาชีวอนามัยและความปลอดภัย</option>
+                                <option value="ส่วนกฎหมายและระเบียบ">ส่วนกฎหมายและระเบียบ</option>
+                                <option value="ส่วนมาตรฐานและวิชาการ">ส่วนมาตรฐานและวิชาการ</option>
+                                <option value="ส่วนโครงการพิเศษ">ส่วนโครงการพิเศษ</option>
+                                <option value="แผนกOne Stop Service 1">แผนกOne Stop Service 1</option>
+                                <option value="แผนกOne Stop Service 2">แผนกOne Stop Service 2</option>
+                                <option value="แผนกOne Stop Service 3">แผนกOne Stop Service 3</option>
+                                <option value="แผนกตลาดไท">แผนกตลาดไท</option>
+                                <option value="ประสานงานขายและพัฒนาธุรกิจ 1">ประสานงานขายและพัฒนาธุรกิจ 1</option>
+                                <option value="ประสานงานขายและพัฒนาธุรกิจ 2">ประสานงานขายและพัฒนาธุรกิจ 2</option>
+                                <option value="กรรมการผู้อำนวยการ">กรรมการผู้อำนวยการ</option>
+                                <option value="รองกรรมการผู้อำนวยการ สายงานปฏิบัติการ">รองกรรมการผู้อำนวยการ สายงานปฏิบัติการ</option>
+                                <option value="รองกรรมการผู้อำนวยการ สายงานบริหาร">รองกรรมการผู้อำนวยการ สายงานบริหาร</option>
+                                <option value="ส่วนตรวจสอบภายใน">ส่วนตรวจสอบภายใน</option>
+                                <option value="ผู้เชี่ยวชาญ">ผู้เชี่ยวชาญ</option>
+                                <option value="ที่ปรึกษาบริษัทฯ">ที่ปรึกษาบริษัทฯ</option>
+                                <option value="คณะกรรมการ">คณะกรรมการ</option>
+                                <option value="กลุ่มงาน One Stop Service">กลุ่มงาน One Stop Service</option>
+                                <option value="กลุ่มงาน กฎหมายและคดีความ">กลุ่มงาน กฎหมายและคดีความ</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">หัวข้อการประชุม</label>
+                            <input type="text" name="name" id="edit_topic" class="form-control rounded-3" required>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6 mb-3">
+                                <label class="form-label small fw-bold text-muted">Zoom Account</label>
+                                <select name="room" id="edit_room" class="form-select rounded-3">
+                                    <option value="Zoom Account 1">Zoom Account 1</option>
+                                    <option value="Zoom Account 2">Zoom Account 2</option>
+                                </select>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label small fw-bold text-muted">วันที่จอง</label>
+                                <input type="date" name="date" id="edit_date" class="form-control rounded-3" required>
+                            </div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label small fw-bold text-muted">เริ่ม</label>
+                                <input type="time" name="start_time" id="edit_start" class="form-control rounded-3" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-bold text-muted">ถึง</label>
+                                <input type="time" name="end_time" id="edit_end" class="form-control rounded-3" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pb-4 px-4">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4">บันทึกการแก้ไข</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="addUserModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="fw-bold m-0 text-success"><i class="fa-solid fa-user-plus me-2"></i>เพิ่มบัญชีผู้ใช้งานใหม่</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="/add_user" method="POST">
+                    <div class="modal-body px-4">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Username</label>
+                            <input type="text" name="username" class="form-control rounded-3" placeholder="ตั้งชื่อผู้ใช้งาน" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Password</label>
+                            <input type="password" name="password" class="form-control rounded-3" placeholder="ตั้งรหัสผ่าน" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pb-4 px-4">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button type="submit" class="btn btn-success rounded-pill px-4">สร้าง Account</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header border-0 pt-4 px-4">
+                    <h5 class="fw-bold m-0 text-primary"><i class="fa-solid fa-user-pen me-2"></i>แก้ไขข้อมูลผู้ใช้งาน</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editUserForm" method="POST">
+                    <div class="modal-body px-4">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Username</label>
+                            <input type="text" name="username" id="edit_u_username" class="form-control rounded-3" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-muted">Password ใหม่ (ปล่อยว่างถ้าไม่ต้องการเปลี่ยน)</label>
+                            <input type="password" name="password" class="form-control rounded-3" placeholder="กรอกรหัสใหม่เพื่อเปลี่ยน">
+                        </div>
+                        <p class="small text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i> หากเปลี่ยนรหัสผ่าน เครื่องอื่นที่ล็อกอินชื่อนี้อยู่จะต้องเข้าสู่ระบบใหม่</p>
+                    </div>
+                    <div class="modal-footer border-0 pb-4 px-4">
+                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4">บันทึกการแก้ไข</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentRoom = 'all';
+
+        function switchSection(section, btn) {
+            document.querySelectorAll(".nav-link").forEach(b => b.classList.remove("active"));
+            
+            if (section === 'user') {
+                document.querySelectorAll('.booking-section').forEach(el => el.style.display = 'none');
+                document.querySelector('.booking-controls').style.display = 'none';
+                document.querySelector('.user-section').style.display = 'block';
+                document.querySelector('.user-controls').style.display = 'block';
+                document.getElementById('btn-user-manage').classList.add("active");
+            } else {
+                document.querySelectorAll('.booking-section').forEach(el => el.style.display = 'flex');
+                document.querySelector('.card.booking-section').style.display = 'block';
+                document.querySelector('.booking-controls').style.display = 'block';
+                document.querySelector('.user-section').style.display = 'none';
+                document.querySelector('.user-controls').style.display = 'none';
+                if(!btn || btn.id === 'btn-user-manage') {
+                    document.getElementById('btn-booking-all').classList.add("active");
+                } else {
+                    btn.classList.add("active");
+                }
+            }
+        }
+
+        window.onload = function() {
+            const body = document.body;
+            const cat = body.getAttribute('data-flash-cat');
+            const msg = body.getAttribute('data-flash-msg');
+            if (cat && msg) {
+                Swal.fire({
+                    icon: cat === 'success' ? 'success' : 'error',
+                    title: msg,
+                    timer: 2000,
+                    showConfirmButton: false,
+                    toast: true,
+                    position: 'top-end'
+                });
+            }
+
+            const rows = document.querySelectorAll(".booking-row");
+            const rooms = new Set();
+            rows.forEach(row => {
+                const r = row.getAttribute("data-room");
+                if(r) rooms.add(r);
+            });
+            
+            const sortedRooms = Array.from(rooms).sort();
+            const tabContainer = document.getElementById("dynamicRoomTabs");
+
+            sortedRooms.forEach(room => {
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.id = "btn-room-" + room;
+                btn.className = "nav-link";
+                btn.innerHTML = `${room}`;
+                btn.onclick = function() { 
+                    switchSection('booking', this); 
+                    filterData(room, this); 
+                };
+                tabContainer.appendChild(btn);
+            });
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const targetTab = urlParams.get('tab');
+
+            if (targetTab === 'user') {
+                switchSection('user', document.getElementById('btn-user-manage'));
+            } else if (targetTab && targetTab !== 'all') {
+                setTimeout(() => {
+                    const roomBtn = document.getElementById('btn-room-' + targetTab);
+                    if (roomBtn) roomBtn.click();
+                }, 100);
+            }
+        };
+
+        function filterData(roomNum, btn) {
+            if (roomNum !== undefined) {
+                currentRoom = roomNum;
+                document.querySelectorAll(".nav-link").forEach(b => b.classList.remove("active"));
+                if(btn) btn.classList.add("active");
+            }
+            const searchInput = document.getElementById("searchInput").value.toLowerCase();
+            const rows = document.querySelectorAll(".booking-row");
+            rows.forEach(row => {
+                const rowRoom = row.getAttribute("data-room");
+                const rowText = row.innerText.toLowerCase();
+                const matchRoom = (currentRoom === 'all' || rowRoom === currentRoom);
+                const matchSearch = rowText.includes(searchInput);
+                row.style.display = (matchRoom && matchSearch) ? "" : "none";
+            });
+        }
+
+        function filterUser() {
+            const input = document.getElementById("searchUserInput").value.toLowerCase();
+            const rows = document.querySelectorAll(".user-row");
+            rows.forEach(row => {
+                const usernameElement = row.querySelector("td:nth-child(2)");
+                if (usernameElement) {
+                    const username = usernameElement.innerText.toLowerCase();
+                    row.style.display = username.includes(input) ? "" : "none";
+                }
+            });
+        }
+
+        function openEditModal(id, req, dept, topic, room, date, start, end) {
+            document.getElementById('editForm').action = '/edit_booking/' + id;
+            document.getElementById('edit_requester').value = req;
+            
+            let deptSelect = document.getElementById('edit_dept');
+            if (deptSelect) {
+                let deptExists = Array.from(deptSelect.options).some(opt => opt.value === dept);
+                if (!deptExists && dept && dept !== 'None' && dept !== '') {
+                    let newOpt = new Option(dept, dept);
+                    deptSelect.add(newOpt);
+                }
+                deptSelect.value = dept;
+            }
+
+            document.getElementById('edit_topic').value = topic;
+            let roomValue = room.toString();
+            document.getElementById('edit_room').value = roomValue;
+            document.getElementById('edit_date').value = date;
+            document.getElementById('edit_start').value = start;
+            document.getElementById('edit_end').value = end;
+            
+            new bootstrap.Modal(document.getElementById('editModal')).show();
+        }
+
+        function openEditUserModal(id, username) {
+            document.getElementById('editUserForm').action = '/edit_user/' + id;
+            document.getElementById('edit_u_username').value = username;
+            new bootstrap.Modal(document.getElementById('editUserModal')).show();
+        }
+
+        function confirmDelete(id, name) {
+            Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: `ต้องการลบรายการจองของ ${name} ใช่หรือไม่?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                confirmButtonText: 'ลบข้อมูล',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) window.location.href = `/delete/${id}`;
+            });
+        }
+
+        function confirmDeleteUser(id, username) {
+            Swal.fire({
+                title: 'ลบบัญชีผู้ใช้?',
+                text: `ต้องการลบชื่อผู้ใช้งาน ${username} ออกจากระบบใช่หรือไม่?`,
+                icon: 'error',
+                showCancelButton: true,
+                confirmButtonText: 'ลบบัญชี',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) window.location.href = `/delete_user/${id}`;
+            });
+        }
+    </script>
+</body>
+</html>
+
