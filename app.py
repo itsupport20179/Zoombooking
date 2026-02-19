@@ -276,6 +276,8 @@ def edit_booking(id):
     return redirect(url_for('admin_panel', tab=room))
 
 if __name__ == '__main__':
-    # ส่วนสำคัญสำหรับการรันบน Render
+    # ส่วนสำคัญสำหรับการรันบน Render และ Local
+    # ดึง Port จาก Environment Variable ที่ Render กำหนดให้ หรือใช้ 5000 เป็น Default
     port = int(os.environ.get("PORT", 5000))
+    # ตั้ง host เป็น 0.0.0.0 เพื่อให้ภายนอก (Render) เข้าถึงได้
     app.run(host='0.0.0.0', port=port)
