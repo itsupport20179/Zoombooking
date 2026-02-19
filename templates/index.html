@@ -589,23 +589,15 @@
                 initialView: 'dayGridMonth',
                 locale: 'th',
                 events: '/api/bookings',
-                dayMaxEvents: 0,
+                dayMaxEvents: true,
                 headerToolbar: {
                     left: 'title',
                     center: '',
                     right: 'today prev,next'
                 },
-                moreLinkClick: "none",
-                moreLinkContent: (args) => {
-                    return `<span style="color: #2563eb; font-weight: 600;">+${args.num} รายการ</span>`;
-                },
-                moreLinkDidMount: (arg) => {
-                    arg.el.addEventListener('click', (e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        const dateStr = arg.el.closest('.fc-daygrid-day').getAttribute('data-date');
-                        openBookingModal(dateStr);
-                    });
+                moreLinkClick: 'popover',
+                moreLinkContent: function(arg) {
+                    return '<i class="fa-solid fa-thumbtack" style="color: #dc2626;"></i> ' + arg.num;
                 },
                 dateClick: (info) => { openBookingModal(info.dateStr); }
             });
