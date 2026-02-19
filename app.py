@@ -7,10 +7,17 @@ import os
 import uuid 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'zoom_booking_premium_2026'
+# แนะนำให้เปลี่ยน Secret Key เป็นค่าเดาได้ยากเมื่อใช้งานจริง
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'zoom_booking_premium_2026')
 
-# ใช้ SQLite
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+# การตั้งค่า Database สำหรับ Render และ Local
+if os.environ.get('DATABASE_URL'):
+    # รองรับ PostgreSQL บน Render (ถ้ามี)
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("postgres://", "postgresql://", 1)
+else:
+    # ใช้ SQLite เมื่อรันในเครื่อง
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
@@ -33,10 +40,11 @@ class Booking(db.Model):
     end_time = db.Column(db.String(5))
     username = db.Column(db.String(50))
 
+# สร้าง Database และ Admin เริ่มต้น
 with app.app_context():
     db.create_all()
-    # สร้าง Admin ตัวแรกถ้ายังไม่มี
     if not User.query.filter_by(username='admin').first():
+        # รหัสผ่านเริ่มต้นคือ 123456
         db.session.add(User(username='admin', password=generate_password_hash('123456'), role='admin'))
     db.session.commit()
 
@@ -71,8 +79,11 @@ def admin_required(f):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        user = User.query.filter_by(username=request.form['username']).first()
-        if user and check_password_hash(user.password, request.form['password']):
+        username = request.form.get('username')
+        password = request.form.get('password')
+        user = User.query.filter_by(username=username).first()
+        
+        if user and check_password_hash(user.password, password):
             new_session_id = str(uuid.uuid4())
             user.current_session_id = new_session_id
             db.session.commit()
@@ -82,6 +93,7 @@ def login():
             session['role'] = user.role
             session['session_id'] = new_session_id 
             return redirect(url_for('index'))
+        
         flash('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง', 'danger')
     return render_template('login.html')
 
@@ -98,7 +110,7 @@ def logout():
 @app.route('/')
 @login_required
 def index():
-    return render_template('index.html', role=session['role'], username=session['username'])
+    return render_template('index.html', role=session.get('role'), username=session.get('username'))
 
 @app.route('/api/bookings')
 @login_required
@@ -121,10 +133,20 @@ def get_bookings():
 @app.route('/book', methods=['POST'])
 @login_required
 def book():
-    req_name, dept, topic, room, date, start, end = request.form.get('requester_name'), request.form.get('department'), request.form.get('name'), request.form.get('room'), request.form.get('date'), request.form.get('start_time'), request.form.get('end_time')
+    req_name = request.form.get('requester_name')
+    dept = request.form.get('department')
+    topic = request.form.get('name')
+    room = request.form.get('room')
+    date = request.form.get('date')
+    start = request.form.get('start_time')
+    end = request.form.get('end_time')
     
+    if not all([req_name, dept, topic, room, date, start, end]):
+        flash('กรุณากรอกข้อมูลให้ครบถ้วน', 'danger')
+        return redirect(url_for('index'))
+
     if start >= end:
-        flash('กรุณาเลือกเวลาให้ถูกต้อง', 'danger')
+        flash('กรุณาเลือกเวลาให้ถูกต้อง (เวลาเริ่มต้องก่อนเวลาเลิก)', 'danger')
         return redirect(url_for('index'))
     
     conflict = Booking.query.filter_by(date=date, room=room).filter((Booking.start_time < end) & (Booking.end_time > start)).first()
@@ -133,10 +155,20 @@ def book():
         return redirect(url_for('index'))
     
     try:
-        db.session.add(Booking(requester_name=req_name, department=dept, name=topic, room=room, date=date, start_time=start, end_time=end, username=session['username']))
+        new_booking = Booking(
+            requester_name=req_name, 
+            department=dept, 
+            name=topic, 
+            room=room, 
+            date=date, 
+            start_time=start, 
+            end_time=end, 
+            username=session.get('username')
+        )
+        db.session.add(new_booking)
         db.session.commit()
         flash('บันทึกการจองสำเร็จ!', 'success')
-    except Exception:
+    except Exception as e:
         db.session.rollback()
         flash('เกิดข้อผิดพลาดในการบันทึกข้อมูล', 'danger')
     return redirect(url_for('index'))
@@ -156,7 +188,6 @@ def add_user():
     
     if User.query.filter_by(username=u).first():
         flash('ชื่อผู้ใช้นี้มีอยู่ในระบบแล้ว', 'danger')
-        return redirect(url_for('admin_panel', tab='user'))
     else:
         new_user = User(username=u, password=generate_password_hash(p), role='user')
         db.session.add(new_user)
@@ -175,7 +206,7 @@ def edit_user(id):
     new_username = request.form.get('username')
     new_password = request.form.get('password')
     
-    if new_username != user.username:
+    if new_username and new_username != user.username:
         if User.query.filter_by(username=new_username).first():
             flash('ชื่อผู้ใช้นี้มีผู้ใช้งานแล้ว', 'danger')
             return redirect(url_for('admin_panel', tab='user'))
@@ -194,7 +225,7 @@ def edit_user(id):
 def delete_user(id):
     user = db.session.get(User, id)
     if user:
-        if user.username == session['username']:
+        if user.username == session.get('username'):
             flash('ไม่สามารถลบชื่อผู้ใช้ที่กำลังใช้งานอยู่ได้', 'danger')
         else:
             db.session.delete(user)
@@ -227,12 +258,10 @@ def edit_booking(id):
     start = request.form.get('start_time')
     end = request.form.get('end_time')
     
-    # ตรวจสอบการทับซ้อน (ยกเว้น ID ของตัวเอง)
     conflict = Booking.query.filter_by(date=date, room=room).filter((Booking.id != id) & (Booking.start_time < end) & (Booking.end_time > start)).first()
     
     if conflict: 
         flash('ไม่สามารถแก้ไขได้ เนื่องจากช่วงเวลาทับซ้อนกับการจองอื่น', 'danger')
-        # ส่งกลับไปยังห้องที่มีปัญหา
         return redirect(url_for('admin_panel', tab=room))
     else:
         booking.requester_name = req_name
@@ -247,5 +276,6 @@ def edit_booking(id):
     return redirect(url_for('admin_panel', tab=room))
 
 if __name__ == '__main__':
+    # ส่วนสำคัญสำหรับการรันบน Render
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
