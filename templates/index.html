@@ -631,17 +631,6 @@
                     center: '',
                     right: 'today prev,next'
                 },
-                moreLinkClick: 'popover',
-                moreLinkContent: function(arg) { 
-                    return { html: '<div class="booking-badge">📌 ' + arg.num + ' รายการ</div>' }; 
-                },
-                moreLinkDidMount: function(arg) {
-                    arg.el.addEventListener('click', function(e) {
-                        e.preventDefault(); e.stopPropagation();
-                        const dateStr = arg.el.closest('.fc-daygrid-day').getAttribute('data-date');
-                        openBookingModal(dateStr);
-                    });
-                },
                 dateClick: (info) => { openBookingModal(info.dateStr); }
             });
 
