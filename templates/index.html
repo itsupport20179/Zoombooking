@@ -631,6 +631,9 @@
                     center: '',
                     right: 'today prev,next'
                 },
+                moreLinkContent: function(arg) { 
+                    return { html: '<div class="booking-badge">📌 ' + arg.num + ' รายการ</div>' }; 
+                },
                 dateClick: (info) => { openBookingModal(info.dateStr); }
             });
 
