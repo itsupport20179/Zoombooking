@@ -508,14 +508,14 @@
                                     <label class="form-label">เริ่ม</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fa-solid fa-clock"></i></span>
-                                        <input type="time" name="start_time" class="form-control text-center" required>
+                                        <input type="text" id="start_time" name="start_time" class="form-control text-center" placeholder="เริ่ม" required>
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <label class="form-label">ถึง</label>
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fa-solid fa-clock"></i></span>
-                                        <input type="time" name="end_time" class="form-control text-center" required>
+                                        <input type="text" id="end_time" name="end_time" class="form-control text-center" placeholder="สิ้นสุด" required>
                                     </div>
                                 </div>
                             </div>
@@ -560,9 +560,7 @@
                                 <tr>
                                     <th class="text-center">เวลา</th>
                                     <th class="text-center">Zoom</th>
-                                    <th class="text-center">หัวข้อ</th>
                                     <th class="text-center">ส่วน/สาขา</th>
-                                    <th class="text-center">ผู้จอง</th>
                                 </tr>
                             </thead>
                             <tbody id="modalBody"></tbody>
@@ -615,6 +613,19 @@
             minDate: "today",
             dateFormat: "Y-m-d"
         });
+        
+        // Time pickers - both type and select
+        const timeCfg = {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            time_24hr: true,
+            minTime: "08:30",
+            maxTime: "17:30",
+            wrap: true
+        };
+        flatpickr("#start_time", { ...timeCfg, defaultDate: "08:30" });
+        flatpickr("#end_time", { ...timeCfg, defaultDate: "09:00" });
 
         // FullCalendar
         document.addEventListener('DOMContentLoaded', function() {
@@ -652,7 +663,7 @@
 
                         if (roomData.length > 0) {
                             html += `<tr style="background: #f8fafc;">
-                                <td colspan="5" class="fw-bold py-2 text-center" style="color: #0f172a;">
+                                <td colspan="3" class="fw-bold py-2 text-center" style="color: #0f172a;">
                                     <i class="fa-solid fa-video me-2" style="color: #2563eb;"></i>${roomName}
                                 </td>
                             </tr>`;
@@ -662,16 +673,14 @@
                                 html += `<tr>
                                     <td class="fw-bold" style="color: #2563eb;">${sTime} - ${eTime}</td>
                                     <td><span class="badge-room">${b.extendedProps.room}</span></td>
-                                    <td class="fw-bold">${b.extendedProps.topic}</td>
                                     <td>${b.extendedProps.dept}</td>
-                                    <td>${b.extendedProps.requester}</td>
                                 </tr>`;
                             });
                         }
                     });
 
                     if (!html) {
-                        html = `<tr><td colspan="5" class="text-center py-4" style="color: #94a3b8;">
+                        html = `<tr><td colspan="3" class="text-center py-4" style="color: #94a3b8;">
                             <i class="fa-regular fa-calendar-xmark me-2"></i>ไม่มีการจองในวันที่เลือก
                         </td></tr>`;
                     }
