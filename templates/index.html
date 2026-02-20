@@ -627,39 +627,17 @@
                 moreLinkContent: function(arg) {
                     return { html: '<i class="fa-solid fa-thumbtack" style="color: #dc2626;"></i> ' + arg.num };
                 },
-                eventsSet: function(events) {
-                    allEvents = events;
-                    
-                    // อัพเดทจำนวนในแต่ละวัน
-                    document.querySelectorAll('.fc-daygrid-day').forEach(function(dayEl) {
-                        const dateStr = dayEl.getAttribute('data-date');
-                        if (dateStr) {
-                            const count = events.filter(e => e.startStr.substring(0, 10) === dateStr).length;
-                            let badge = dayEl.querySelector('.day-booking-badge');
-                            if (count > 0) {
-                                if (!badge) {
-                                    badge = document.createElement('div');
-                                    badge.className = 'day-booking-badge';
-                                    dayEl.appendChild(badge);
-                                }
-                                badge.innerHTML = '<i class="fa-solid fa-thumbtack"></i> ' + count + ' รายการ';
-                                badge.style.display = 'block';
-                            } else if (badge) {
-                                badge.style.display = 'none';
-                            }
+                dayCellDidMount: function(arg) {
+                    const dateStr = arg.date.toISOString().substring(0, 10);
+                    fetch('/api/bookings').then(r => r.json()).then(data => {
+                        const count = data.filter(b => b.start.startsWith(dateStr)).length;
+                        if (count > 0) {
+                            const badge = document.createElement('div');
+                            badge.className = 'day-booking-badge';
+                            badge.innerHTML = '<i class="fa-solid fa-thumbtack"></i> ' + count + ' รายการ';
+                            arg.el.appendChild(badge);
                         }
                     });
-                },
-                eventDidMount: function(info) {
-                    // นับจำนวน event ในวันเดียวกัน
-                    const dateStr = info.event.startStr.substring(0, 10);
-                    const count = allEvents.filter(e => e.startStr.substring(0, 10) === dateStr).length;
-                    
-                    // แสดงจำนวนใน event
-                    const el = info.el;
-                    if (el) {
-                        el.innerHTML = '<span class="fc-event-title"><i class="fa-solid fa-thumbtack"></i> ' + count + ' รายการ</span>';
-                    }
                 },
                 dateClick: (info) => { openBookingModal(info.dateStr); }
             });
