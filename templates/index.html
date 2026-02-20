@@ -238,6 +238,24 @@
 
         .fc-event:hover { background-color: #1d4ed8 !important; }
 
+        .fc-event .fc-event-title { display: none; }
+
+        .day-booking-badge {
+            position: absolute;
+            bottom: 2px;
+            left: 2px;
+            right: 2px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: #dc2626;
+            text-align: center;
+            background: rgba(255,255,255,0.85);
+            padding: 2px 4px;
+            border-radius: 4px;
+            z-index: 10;
+        }
+        .day-booking-badge i { margin-right: 3px; }
+
         .fc-event-simple {
             font-size: 0.7rem;
             font-weight: 600;
@@ -612,6 +630,26 @@
                 },
                 eventsSet: function(events) {
                     allEvents = events;
+                    
+                    // อัพเดทจำนวนในแต่ละวัน
+                    document.querySelectorAll('.fc-daygrid-day').forEach(function(dayEl) {
+                        const dateStr = dayEl.getAttribute('data-date');
+                        if (dateStr) {
+                            const count = events.filter(e => e.startStr.substring(0, 10) === dateStr).length;
+                            let badge = dayEl.querySelector('.day-booking-badge');
+                            if (count > 0) {
+                                if (!badge) {
+                                    badge = document.createElement('div');
+                                    badge.className = 'day-booking-badge';
+                                    dayEl.appendChild(badge);
+                                }
+                                badge.innerHTML = '<i class="fa-solid fa-thumbtack"></i> ' + count + ' รายการ';
+                                badge.style.display = 'block';
+                            } else if (badge) {
+                                badge.style.display = 'none';
+                            }
+                        }
+                    });
                 },
                 eventDidMount: function(info) {
                     // นับจำนวน event ในวันเดียวกัน
