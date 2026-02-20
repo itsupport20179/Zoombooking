@@ -362,7 +362,16 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container-fluid px-4">
-            <button class="btn text-white me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#bookingSidebar" aria-controls="bookingSidebar">
+            <div class="collapse navbar-collapse" id="hamburgerMenu">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#bookingModal">
+                            <i class="fa-solid fa-calendar-plus me-2"></i>จอง Zoom Account
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <button class="btn text-white me-3" type="button" data-bs-toggle="collapse" data-bs-target="#hamburgerMenu" aria-expanded="false" aria-controls="hamburgerMenu">
                 <i class="fa-solid fa-bars fa-lg"></i>
             </button>
             <span class="navbar-brand fw-bold d-flex align-items-center">
@@ -622,6 +631,11 @@
         flatpickr("#dp_sidebar", { minDate: "today", dateFormat: "Y-m-d" });
         flatpickr("#start_time_sidebar", { ...timeCfg, defaultDate: "00:00" });
         flatpickr("#end_time_sidebar", { ...timeCfg, defaultDate: "01:00" });
+        
+        // Modal time pickers
+        flatpickr("#dp_modal", { minDate: "today", dateFormat: "Y-m-d" });
+        flatpickr("#start_time_modal", { ...timeCfg, defaultDate: "00:00" });
+        flatpickr("#end_time_modal", { ...timeCfg, defaultDate: "01:00" });
 
         // FullCalendar
         document.addEventListener('DOMContentLoaded', function() {
@@ -705,71 +719,900 @@
         })()
     </script>
 
-    <!-- Offcanvas Sidebar for Booking -->
-    <div class="offcanvas offcanvas-start" tabindex="-1" id="bookingSidebar" aria-labelledby="bookingSidebarLabel">
-        <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="bookingSidebarLabel">
-                <i class="fa-solid fa-calendar-plus me-2"></i>จอง Zoom Account
-            </h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    <!-- Modal for Booking -->
+    <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bookingModalLabel">
+                        <i class="fa-solid fa-calendar-plus me-2"></i>จอง Zoom Account
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="/book" method="POST" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label">ชื่อผู้จอง</label>
+                            <input type="text" name="requester_name" class="form-control" placeholder="ระบุชื่อ-นามสกุล" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ส่วน/สาขา</label>
+                            <select name="department" class="form-select" required>
+                                <!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Zoom Booking System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --primary-dark: #0f172a;
+            --accent-blue: #2563eb;
+            --text-slate: #475569;
+            --bg-white: #ffffff;
+            --bg-light: #f8fafc;
+            --border-color: #e2e8f0;
+        }
+
+        * { font-family: 'Sarabun', sans-serif; }
+
+        body {
+            background: var(--bg-light);
+            color: var(--primary-dark);
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* ============ Navbar ============ */
+        .navbar {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+            padding: 12px 0;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .user-badge {
+            background: rgba(255,255,255,0.1);
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .btn-nav {
+            padding: 6px 14px;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+            border: none;
+        }
+
+        .btn-admin {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-admin:hover {
+            background: #1d4ed8;
+            color: white;
+        }
+
+        .btn-logout {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+        }
+
+        .btn-logout:hover {
+            background: #dc2626;
+            border-color: #dc2626 !important;
+            color: white;
+        }
+
+        /* ============ Main Container ============ */
+        .main-container {
+            padding: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .page-title i { color: var(--accent-blue); }
+
+        /* ============ Cards ============ */
+        .card {
+            background: var(--bg-white);
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        }
+
+        .card-header-custom {
+            background: var(--primary-dark);
+            border: none;
+            padding: 14px 20px;
+            border-radius: 16px 16px 0 0 !important;
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: white;
+            margin: 0;
+        }
+
+        .card-body-custom { padding: 20px; }
+
+        /* ============ Form Elements ============ */
+        .form-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-slate);
+            margin-bottom: 6px;
+        }
+
+        .form-control, .form-select {
+            border-radius: 8px;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            background: var(--bg-light);
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            background: var(--bg-white);
+        }
+
+        .form-control[readonly] {
+            background-color: var(--bg-white) !important;
+            cursor: pointer;
+        }
+
+        .input-group-text {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            padding-left: 12px;
+        }
+
+        /* ============ Buttons ============ */
+        .btn-booking {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 12px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .btn-booking:hover {
+            background: #1d4ed8;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 12px rgba(37, 99, 235, 0.25);
+        }
+
+        /* ============ Calendar ============ */
+        .calendar-container {
+            background: var(--bg-white);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        }
+
+        .fc { font-family: 'Sarabun', sans-serif; font-size: 0.85rem; }
+
+        .fc .fc-toolbar-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        .fc .fc-button {
+            background: var(--accent-blue);
+            border: none;
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-weight: 500;
+            font-size: 0.8rem;
+        }
+
+        .fc .fc-button:hover { background: #1d4ed8; }
+
+        .fc .fc-daygrid-day {
+            background: var(--bg-white);
+            border: 1px solid #f1f5f9 !important;
+        }
+
+        .fc .fc-daygrid-day-number {
+            color: var(--primary-dark);
+            font-weight: 500;
+            padding: 6px;
+            font-size: 0.8rem;
+        }
+
+        .fc .fc-col-header-cell-cushion {
+            color: var(--text-slate);
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding: 10px 0;
+        }
+
+        .fc-event {
+            border: none;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            background-color: #2563eb !important;
+            color: white !important;
+            cursor: pointer;
+        }
+
+        .fc-event:hover { background-color: #1d4ed8 !important; }
+
+        .fc-event .fc-event-title { display: none; }
+
+        .booking-badge { 
+            background: #dbeafe; 
+            color: #1e40af; 
+            border-radius: 8px; 
+            padding: 6px; 
+            font-size: 11px; 
+            font-weight: 600; 
+            text-align: center; 
+            cursor: pointer; 
+            display: block; 
+            margin-top: 3px; 
+            border: 1px solid #bfdbfe; 
+            transition: transform 0.2s ease; 
+        }
+        .booking-badge:hover { 
+            animation: bounce 0.5s infinite; 
+            background: #bfdbfe; 
+        }
+        @keyframes bounce { 
+            0%, 100% { transform: translateY(0); } 
+            50% { transform: translateY(-5px); } 
+        }
+
+        .fc-event-simple {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-align: center;
+            line-height: 1.2;
+        }
+        .fc-event-simple i { color: #dc2626; margin-right: 3px; }
+
+        .fc .fc-daygrid-more-link {
+            color: var(--accent-blue);
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        /* ============ Modal ============ */
+        .modal-content {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        }
+
+        .modal-header {
+            background: var(--primary-dark);
+            border: none;
+            padding: 14px 20px;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .modal-title {
+            font-weight: 600;
+            color: white;
+            font-size: 0.95rem;
+        }
+
+        .modal-body { padding: 20px; }
+
+        .modal-footer {
+            border-top: 1px solid var(--border-color);
+            padding: 14px 20px;
+        }
+
+        .table-custom { margin-bottom: 0; }
+
+        .table-custom thead th {
+            background: var(--bg-light);
+            border: none;
+            padding: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-slate);
+            text-transform: uppercase;
+            text-align: center;
+        }
+
+        .table-custom tbody td {
+            padding: 12px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.85rem;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .badge-room {
+            background: var(--primary-dark);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .badge-time {
+            background: #e0e7ff;
+            color: #4338ca;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        /* ============ Footer ============ */
+        .footer-text {
+            text-align: center;
+            padding: 20px;
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+
+        /* ============ Responsive ============ */
+        @media (max-width: 768px) {
+            .main-container { padding: 16px; }
+            .navbar { padding: 10px 0; }
+        }
+    </style>
+</head>
+<body class="pb-4">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container-fluid px-4">
+            <div class="collapse navbar-collapse" id="hamburgerMenu">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#bookingModal">
+                            <i class="fa-solid fa-calendar-plus me-2"></i>จอง Zoom Account
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <button class="btn text-white me-3" type="button" data-bs-toggle="collapse" data-bs-target="#hamburgerMenu" aria-expanded="false" aria-controls="hamburgerMenu">
+                <i class="fa-solid fa-bars fa-lg"></i>
+            </button>
+            <span class="navbar-brand fw-bold d-flex align-items-center">
+                <i class="fa-solid fa-video me-2" style="color: #60a5fa;"></i> ZOOM BOOKING
+            </span>
+            <div class="d-flex align-items-center gap-2">
+                <div class="user-badge text-white d-none d-md-flex align-items-center">
+                    <i class="fa-solid fa-user me-2"></i>
+                    <span class="fw-bold">{{username}}</span>
+                </div>
+                {% if role == 'admin' %}
+                    <a href="/admin" class="btn btn-nav btn-admin btn-sm">
+                        <i class="fa-solid fa-gear me-1"></i> ผู้ดูแล
+                    </a>
+                {% endif %}
+                <a href="/logout" class="btn btn-nav btn-logout btn-sm" onclick="return confirmLogout(event)">
+                    <i class="fa-solid fa-arrow-right-from-bracket me-1"></i> ออก
+                </a>
+            </div>
         </div>
-        <div class="offcanvas-body">
-            <form action="/book" method="POST" class="needs-validation" novalidate>
-                <div class="mb-3">
-                    <label class="form-label">ชื่อผู้จอง</label>
-                    <input type="text" name="requester_name" class="form-control" placeholder="ระบุชื่อ-นามสกุล" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">ส่วน/สาขา</label>
-                    <select name="department" class="form-select" required>
-                        <option value="" disabled selected>-- เลือกส่วน/สาขา --</option>
-                        <option value="ส่วนบัญชี">ส่วนบัญชี</option>
-                        <option value="สำนักงานสาขา">สำนักงานสาขา</option>
-                        <option value="ส่วนปฏิบัติการทดสอบ">ส่วนปฏิบัติการทดสอบ</option>
-                        <option value="สำนักงานบริการคุณภาพระบบมาตรฐาน">สำนักงานบริการคุณภาพระบบมาตรฐาน</option>
-                        <option value="ส่วนบริการสอบเทียบเครื่องมือ">ส่วนบริการสอบเทียบเครื่องมือ</option>
-                        <option value="ส่วนตรวจประเมินและรับรองระบบ">ส่วนตรวจประเมินและรับรองระบบ</option>
-                        <option value="แผนกประมง">แผนกประมง</option>
-                        <option value="แผนกพืช-ข้าว">แผนกพืช-ข้าว</option>
-                        <option value="แผนกGHPs/HACCP">แผนกGHPs/HACCP</option>
-                        <option value="ส่วนฝึกอบรมและมาตรฐาน">ส่วนฝึกอบรมและมาตรฐาน</option>
-                        <option value="แผนกฝึกอบรมและบริการที่ปรึกษาห้องปฏิบัติการ">แผนกฝึกอบรมและบริการที่ปรึกษาห้องปฏิบัติการ</option>
-                        <option value="แผนกทดสอบความชำนาญห้องปฏิบัติการ">แผนกทดสอบความชำนาญห้องปฏิบัติการ</option>
-                        <option value="แผนกวิชาการและการประกันคุณภาพห้องปฏิบัติการ">แผนกวิชาการและการประกันคุณภาพห้องปฏิบัติการ</option>
-                        <option value="แผนกมาตรฐานสุขาภิบาลอาหาร">แผนกมาตรฐานสุขาภิบาลอาหาร</option>
-                        <option value="สำนักงานพาณิชย์และยุทธศาสตร์">สำนักงานพาณิชย์และยุทธศาสตร์</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">หัวข้อการประชุม</label>
-                    <input type="text" name="name" class="form-control" placeholder="เรื่องที่ต้องการประชุม" required>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">เลือก Zoom Account</label>
-                    <select name="room" class="form-select" required>
-                        <option value="" selected disabled>-- เลือก --</option>
-                        <option value="Zoom Account 1">Zoom Account 1</option>
-                        <option value="Zoom Account 2">Zoom Account 2</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">วันที่จอง</label>
-                    <input type="text" id="dp_sidebar" name="date" class="form-control" placeholder="เลือกวันที่" readonly required>
-                </div>
-                <div class="row g-2 mb-4">
-                    <div class="col-6">
-                        <label class="form-label">เริ่ม</label>
-                        <input type="text" id="start_time_sidebar" name="start_time" class="form-control" placeholder="เวลาเริ่ม" required>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Page Title -->
+        <div class="page-title">
+            <i class="fa-solid fa-calendar-check"></i>
+            ระบบจอง Zoom Account
+        </div>
+
+        <!-- Content Row -->
+        <div class="row g-4">
+            <!-- Calendar -->
+            <div class="col-12">
+                            <div class="mb-3">
+                                <label class="form-label">ชื่อผู้จอง</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                    <input type="text" name="requester_name" class="form-control" placeholder="ระบุชื่อ-นามสกุล" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">ส่วน/สาขา</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
+                                    <select name="department" class="form-select" required>
+                                        <option value="" disabled selected>-- เลือกส่วน/สาขา --</option>
+                                        <option value="ส่วนบัญชี">ส่วนบัญชี</option>
+                                        <option value="สำนักงานสาขา">สำนักงานสาขา</option>
+                                        <option value="ส่วนปฏิบัติการทดสอบ">ส่วนปฏิบัติการทดสอบ</option>
+                                        <option value="สำนักงานบริการคุณภาพระบบมาตรฐาน">สำนักงานบริการคุณภาพระบบมาตรฐาน</option>
+                                        <option value="ส่วนบริการสอบเทียบเครื่องมือ">ส่วนบริการสอบเทียบเครื่องมือ</option>
+                                        <option value="ส่วนตรวจประเมินและรับรองระบบ">ส่วนตรวจประเมินและรับรองระบบ</option>
+                                        <option value="แผนกประมง">แผนกประมง</option>
+                                        <option value="แผนกพืช-ข้าว">แผนกพืช-ข้าว</option>
+                                        <option value="แผนกGHPs/HACCP">แผนกGHPs/HACCP</option>
+                                        <option value="ส่วนฝึกอบรมและมาตรฐาน">ส่วนฝึกอบรมและมาตรฐาน</option>
+                                        <option value="แผนกฝึกอบรมและบริการที่ปรึกษาห้องปฏิบัติการ">แผนกฝึกอบรมและบริการที่ปรึกษาห้องปฏิบัติการ</option>
+                                        <option value="แผนกทดสอบความชำนาญห้องปฏิบัติการ">แผนกทดสอบความชำนาญห้องปฏิบัติการ</option>
+                                        <option value="แผนกวิชาการและการประกันคุณภาพห้องปฏิบัติการ">แผนกวิชาการและการประกันคุณภาพห้องปฏิบัติการ</option>
+                                        <option value="แผนกมาตรฐานสุขาภิบาลอาหาร">แผนกมาตรฐานสุขาภิบาลอาหาร</option>
+                                        <option value="สำนักงานพาณิชย์และยุทธศาสตร์">สำนักงานพาณิชย์และยุทธศาสตร์</option>
+                                        <option value="ส่วนประสานงานขายและพัฒนาธุรกิจ">ส่วนประสานงานขายและพัฒนาธุรกิจ</option>
+                                        <option value="แผนกประสานงานขายและพัฒนาธุรกิจ">แผนกประสานงานขายและพัฒนาธุรกิจ</option>
+                                        <option value="แผนกโครงการพิเศษ">แผนกโครงการพิเศษ</option>
+                                        <option value="แผนกผู้เชี่ยวชาญด้านการขาย">แผนกผู้เชี่ยวชาญด้านการขาย</option>
+                                        <option value="ส่วนสื่อสารธุรกิจองค์กร">ส่วนสื่อสารธุรกิจองค์กร</option>
+                                        <option value="ส่วนแผน งบประมาณและการตลาด">ส่วนแผน งบประมาณและการตลาด</option>
+                                        <option value="แผนกแผนและงบประมาณ">แผนกแผนและงบประมาณ</option>
+                                        <option value="แผนกการตลาด">แผนกการตลาด</option>
+                                        <option value="ส่วนการตลาดและประชาสัมพันธ์">ส่วนการตลาดและประชาสัมพันธ์</option>
+                                        <option value="แผนกประชาสัมพันธ์">แผนกประชาสัมพันธ์</option>
+                                        <option value="ส่วนขายและสนับสนุนการขายกรุงเทพและปริมณฑล">ส่วนขายและสนับสนุนการขายกรุงเทพและปริมณฑล</option>
+                                        <option value="ส่วนขายและสนับสนุนการขายภูมิภาค">ส่วนขายและสนับสนุนการขายภูมิภาค</option>
+                                        <option value="สำนักงานเทคโนโลยีและวิศวกรรม">สำนักงานเทคโนโลยีและวิศวกรรม</option>
+                                        <option value="ส่วนเทคโนโลยีสารสนเทศ">ส่วนเทคโนโลยีสารสนเทศ</option>
+                                        <option value="ส่วนเครื่องมือวิทยาศาสตร์">ส่วนเครื่องมือวิทยาศาสตร์</option>
+                                        <option value="ส่วนงานอาคารสถานที่">ส่วนงานอาคารสถานที่</option>
+                                        <option value="สำนักงานบัญชีและการเงิน">สำนักงานบัญชีและการเงิน</option>
+                                        <option value="ส่วนการเงิน">ส่วนการเงิน</option>
+                                        <option value="ส่วนจัดซื้อและพัสดุ">ส่วนจัดซื้อและพัสดุ</option>
+                                        <option value="สำนักงานกรรมการผู้อำนวยการ">สำนักงานกรรมการผู้อำนวยการ</option>
+                                        <option value="ส่วนธุรการและเลขานุการการประชุม">ส่วนธุรการและเลขานุการการประชุม</option>
+                                        <option value="แผนกธุรการ">แผนกธุรการ</option>
+                                        <option value="แผนกเลขานุการการประชุม">แผนกเลขานุการการประชุม</option>
+                                        <option value="ส่วนทรัพยากรบุคคล">ส่วนทรัพยากรบุคคล</option>
+                                        <option value="แผนกพัฒนาทรัพยากรบุคคล">แผนกพัฒนาทรัพยากรบุคคล</option>
+                                        <option value="แผนกอาชีวอนามัยและความปลอดภัย">แผนกอาชีวอนามัยและความปลอดภัย</option>
+                                        <option value="ส่วนกฎหมายและระเบียบ">ส่วนกฎหมายและระเบียบ</option>
+                                        <option value="ส่วนมาตรฐานและวิชาการ">ส่วนมาตรฐานและวิชาการ</option>
+                                        <option value="ส่วนโครงการพิเศษ">ส่วนโครงการพิเศษ</option>
+                                        <option value="แผนกOne Stop Service 1">แผนกOne Stop Service 1</option>
+                                        <option value="แผนกOne Stop Service 2">แผนกOne Stop Service 2</option>
+                                        <option value="แผนกOne Stop Service 3">แผนกOne Stop Service 3</option>
+                                        <option value="แผนกตลาดไท">แผนกตลาดไท</option>
+                                        <option value="ประสานงานขายและพัฒนาธุรกิจ 1">ประสานงานขายและพัฒนาธุรกิจ 1</option>
+                                        <option value="ประสานงานขายและพัฒนาธุรกิจ 2">ประสานงานขายและพัฒนาธุรกิจ 2</option>
+                                        <option value="กรรมการผู้อำนวยการ">กรรมการผู้อำนวยการ</option>
+                                        <option value="รองกรรมการผู้อำนวยการ สายงานปฏิบัติการ">รองกรรมการผู้อำนวยการ สายงานปฏิบัติการ</option>
+                                        <option value="รองกรรมการผู้อำนวยการ สายงานบริหาร">รองกรรมการผู้อำนวยการ สายงานบริหาร</option>
+                                        <option value="ส่วนตรวจสอบภายใน">ส่วนตรวจสอบภายใน</option>
+                                        <option value="ผู้เชี่ยวชาญ">ผู้เชี่ยวชาญ</option>
+                                        <option value="ที่ปรึกษาบริษัทฯ">ที่ปรึกษาบริษัทฯ</option>
+                                        <option value="คณะกรรมการ">คณะกรรมการ</option>
+                                        <option value="กลุ่มงาน One Stop Service">กลุ่มงาน One Stop Service</option>
+                                        <option value="กลุ่มงาน กฎหมายและคดีความ">กลุ่มงาน กฎหมายและคดีความ</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">หัวข้อการประชุม</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-heading"></i></span>
+                                    <input type="text" name="name" class="form-control" placeholder="เรื่องที่ต้องการประชุม" required>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">เลือก Zoom Account</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-video"></i></span>
+                                    <select name="room" class="form-select" required>
+                                        <option value="" selected disabled>-- เลือก --</option>
+                                        <option value="Zoom Account 1">Zoom Account 1</option>
+                                        <option value="Zoom Account 2">Zoom Account 2</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">วันที่จอง</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="fa-solid fa-calendar"></i></span>
+                                    <input type="text" id="dp" name="date" class="form-control" placeholder="เลือกวันที่" readonly required>
+                                </div>
+                            </div>
+                            <div class="row g-2 mb-4">
+                                <div class="col-6">
+                                    <label class="form-label">เริ่ม</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-clock"></i></span>
+                                        <input type="text" id="start_time" name="start_time" class="form-control text-center" placeholder="เริ่ม" required>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">ถึง</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fa-solid fa-clock"></i></span>
+                                        <input type="text" id="end_time" name="end_time" class="form-control text-center" placeholder="สิ้นสุด" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn-booking">
+                                <i class="fa-solid fa-check-circle me-2"></i>
+                                บันทึกการจอง
+                            </button>
+                        </form>
                     </div>
-                    <div class="col-6">
-                        <label class="form-label">ถึง</label>
-                        <input type="text" id="end_time_sidebar" name="end_time" class="form-control" placeholder="เวลาสิ้นสุด" required>
+                </div>
+            </div>
+
+            <!-- Calendar -->
+            <div class="col-12">
+                <div class="calendar-container">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-text">
+            <i class="fa-solid fa-copyright"></i> 2026 IT Department. All Rights Reserved.
+        </div>
+    </div>
+
+    <!-- Day Modal -->
+    <div class="modal fade" id="dayModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">
+                        <i class="fa-solid fa-calendar-day me-2"></i>
+                        รายละเอียดการจอง
+                    </h5>
+                    <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-custom">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">เวลา</th>
+                                    <th class="text-center">Zoom</th>
+                                    <th class="text-center">ส่วน/สาขา</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modalBody"></tbody>
+                        </table>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary w-100">
-                    <i class="fa-solid fa-check-circle me-2"></i>บันทึกการจอง
-                </button>
-            </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+        // Confirm Logout
+        function confirmLogout(event) {
+            event.preventDefault();
+            Swal.fire({
+                title: 'ออกจากระบบ',
+                text: 'คุณต้องการออกจากระบบหรือไม่?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2563eb',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: '<i class="fa-solid fa-check"></i> ยืนยัน',
+                cancelButtonText: '<i class="fa-solid fa-xmark"></i> ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) window.location.href = '/logout';
+            });
+            return false;
+        }
+
+        // Flash Messages
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    Swal.fire({
+                        icon: '{{ "success" if category == "success" else "error" }}',
+                        title: '{{ message }}',
+                        timer: 2500,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        // Flatpickr
+        flatpickr("#dp", {
+            minDate: "today",
+            dateFormat: "Y-m-d"
+        });
+        
+        // Time pickers - both type and select, full 24 hours
+        const timeCfg = {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            time_24hr: true
+        };
+        flatpickr("#start_time", { ...timeCfg, defaultDate: "00:00" });
+        flatpickr("#end_time", { ...timeCfg, defaultDate: "01:00" });
+        
+        // Sidebar time pickers
+        flatpickr("#dp_sidebar", { minDate: "today", dateFormat: "Y-m-d" });
+        flatpickr("#start_time_sidebar", { ...timeCfg, defaultDate: "00:00" });
+        flatpickr("#end_time_sidebar", { ...timeCfg, defaultDate: "01:00" });
+        
+        // Modal time pickers
+        flatpickr("#dp_modal", { minDate: "today", dateFormat: "Y-m-d" });
+        flatpickr("#start_time_modal", { ...timeCfg, defaultDate: "00:00" });
+        flatpickr("#end_time_modal", { ...timeCfg, defaultDate: "01:00" });
+
+        // FullCalendar
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var allEvents = [];
+            
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'th',
+                events: '/api/bookings',
+                dayMaxEvents: 0,
+                headerToolbar: {
+                    left: 'title',
+                    center: '',
+                    right: 'today prev,next'
+                },
+                moreLinkContent: function(arg) { 
+                    return { html: '<div class="booking-badge">📌 ' + arg.num + ' รายการ</div>' }; 
+                },
+                dateClick: (info) => { openBookingModal(info.dateStr); }
+            });
+
+            function openBookingModal(dateStr) {
+                document.getElementById('modalTitle').innerHTML =
+                    '<i class="fa-solid fa-calendar-day me-2"></i>รายการจองวันที่ ' + dateStr;
+
+                fetch('/api/bookings').then(r => r.json()).then(data => {
+                    const filtered = data.filter(b => b.start.startsWith(dateStr));
+                    const roomList = ["Zoom Account 1", "Zoom Account 2"];
+                    let html = '';
+
+                    roomList.forEach(roomName => {
+                        const roomData = filtered.filter(b => b.extendedProps.room === roomName)
+                            .sort((a, b) => a.start.localeCompare(b.start));
+
+                        if (roomData.length > 0) {
+                            html += `<tr style="background: #f8fafc;">
+                                <td colspan="3" class="fw-bold py-2 text-center" style="color: #0f172a;">
+                                    <i class="fa-solid fa-video me-2" style="color: #2563eb;"></i>${roomName}
+                                </td>
+                            </tr>`;
+                            roomData.forEach(b => {
+                                const sTime = b.start.split('T')[1];
+                                const eTime = b.end.split('T')[1];
+                                html += `<tr>
+                                    <td class="fw-bold" style="color: #2563eb;">${sTime} - ${eTime}</td>
+                                    <td><span class="badge-room">${b.extendedProps.room}</span></td>
+                                    <td>${b.extendedProps.dept}</td>
+                                </tr>`;
+                            });
+                        }
+                    });
+
+                    if (!html) {
+                        html = `<tr><td colspan="3" class="text-center py-4" style="color: #94a3b8;">
+                            <i class="fa-regular fa-calendar-xmark me-2"></i>ไม่มีการจองในวันที่เลือก
+                        </td></tr>`;
+                    }
+
+                    document.getElementById('modalBody').innerHTML = html;
+                    new bootstrap.Modal(document.getElementById('dayModal')).show();
+                });
+            }
+
+            calendar.render();
+        });
+
+        // Form Validation
+        (() => {
+            'use strict'
+            const forms = document.querySelectorAll('.needs-validation')
+            Array.from(forms).forEach(form => {
+                form.addEventListener('submit', event => {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+    </script>
+
+    <!-- Modal for Booking -->
+    <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bookingModalLabel">
+                        <i class="fa-solid fa-calendar-plus me-2"></i>จอง Zoom Account
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form action="/book" method="POST" class="needs-validation" novalidate>
+                        <div class="mb-3">
+                            <label class="form-label">ชื่อผู้จอง</label>
+                            <input type="text" name="requester_name" class="form-control" placeholder="ระบุชื่อ-นามสกุล" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ส่วน/สาขา</label>
+                            <select name="department" class="form-select" required>
+                                <select name="department" class="form-select" required>
+                                        <option value="" disabled selected>-- เลือกส่วน/สาขา --</option>
+                                        <option value="ส่วนบัญชี">ส่วนบัญชี</option>
+                                        <option value="สำนักงานสาขา">สำนักงานสาขา</option>
+                                        <option value="ส่วนปฏิบัติการทดสอบ">ส่วนปฏิบัติการทดสอบ</option>
+                                        <option value="สำนักงานบริการคุณภาพระบบมาตรฐาน">สำนักงานบริการคุณภาพระบบมาตรฐาน</option>
+                                        <option value="ส่วนบริการสอบเทียบเครื่องมือ">ส่วนบริการสอบเทียบเครื่องมือ</option>
+                                        <option value="ส่วนตรวจประเมินและรับรองระบบ">ส่วนตรวจประเมินและรับรองระบบ</option>
+                                        <option value="แผนกประมง">แผนกประมง</option>
+                                        <option value="แผนกพืช-ข้าว">แผนกพืช-ข้าว</option>
+                                        <option value="แผนกGHPs/HACCP">แผนกGHPs/HACCP</option>
+                                        <option value="ส่วนฝึกอบรมและมาตรฐาน">ส่วนฝึกอบรมและมาตรฐาน</option>
+                                        <option value="แผนกฝึกอบรมและบริการที่ปรึกษาห้องปฏิบัติการ">แผนกฝึกอบรมและบริการที่ปรึกษาห้องปฏิบัติการ</option>
+                                        <option value="แผนกทดสอบความชำนาญห้องปฏิบัติการ">แผนกทดสอบความชำนาญห้องปฏิบัติการ</option>
+                                        <option value="แผนกวิชาการและการประกันคุณภาพห้องปฏิบัติการ">แผนกวิชาการและการประกันคุณภาพห้องปฏิบัติการ</option>
+                                        <option value="แผนกมาตรฐานสุขาภิบาลอาหาร">แผนกมาตรฐานสุขาภิบาลอาหาร</option>
+                                        <option value="สำนักงานพาณิชย์และยุทธศาสตร์">สำนักงานพาณิชย์และยุทธศาสตร์</option>
+                                        <option value="ส่วนประสานงานขายและพัฒนาธุรกิจ">ส่วนประสานงานขายและพัฒนาธุรกิจ</option>
+                                        <option value="แผนกประสานงานขายและพัฒนาธุรกิจ">แผนกประสานงานขายและพัฒนาธุรกิจ</option>
+                                        <option value="แผนกโครงการพิเศษ">แผนกโครงการพิเศษ</option>
+                                        <option value="แผนกผู้เชี่ยวชาญด้านการขาย">แผนกผู้เชี่ยวชาญด้านการขาย</option>
+                                        <option value="ส่วนสื่อสารธุรกิจองค์กร">ส่วนสื่อสารธุรกิจองค์กร</option>
+                                        <option value="ส่วนแผน งบประมาณและการตลาด">ส่วนแผน งบประมาณและการตลาด</option>
+                                        <option value="แผนกแผนและงบประมาณ">แผนกแผนและงบประมาณ</option>
+                                        <option value="แผนกการตลาด">แผนกการตลาด</option>
+                                        <option value="ส่วนการตลาดและประชาสัมพันธ์">ส่วนการตลาดและประชาสัมพันธ์</option>
+                                        <option value="แผนกประชาสัมพันธ์">แผนกประชาสัมพันธ์</option>
+                                        <option value="ส่วนขายและสนับสนุนการขายกรุงเทพและปริมณฑล">ส่วนขายและสนับสนุนการขายกรุงเทพและปริมณฑล</option>
+                                        <option value="ส่วนขายและสนับสนุนการขายภูมิภาค">ส่วนขายและสนับสนุนการขายภูมิภาค</option>
+                                        <option value="สำนักงานเทคโนโลยีและวิศวกรรม">สำนักงานเทคโนโลยีและวิศวกรรม</option>
+                                        <option value="ส่วนเทคโนโลยีสารสนเทศ">ส่วนเทคโนโลยีสารสนเทศ</option>
+                                        <option value="ส่วนเครื่องมือวิทยาศาสตร์">ส่วนเครื่องมือวิทยาศาสตร์</option>
+                                        <option value="ส่วนงานอาคารสถานที่">ส่วนงานอาคารสถานที่</option>
+                                        <option value="สำนักงานบัญชีและการเงิน">สำนักงานบัญชีและการเงิน</option>
+                                        <option value="ส่วนการเงิน">ส่วนการเงิน</option>
+                                        <option value="ส่วนจัดซื้อและพัสดุ">ส่วนจัดซื้อและพัสดุ</option>
+                                        <option value="สำนักงานกรรมการผู้อำนวยการ">สำนักงานกรรมการผู้อำนวยการ</option>
+                                        <option value="ส่วนธุรการและเลขานุการการประชุม">ส่วนธุรการและเลขานุการการประชุม</option>
+                                        <option value="แผนกธุรการ">แผนกธุรการ</option>
+                                        <option value="แผนกเลขานุการการประชุม">แผนกเลขานุการการประชุม</option>
+                                        <option value="ส่วนทรัพยากรบุคคล">ส่วนทรัพยากรบุคคล</option>
+                                        <option value="แผนกพัฒนาทรัพยากรบุคคล">แผนกพัฒนาทรัพยากรบุคคล</option>
+                                        <option value="แผนกอาชีวอนามัยและความปลอดภัย">แผนกอาชีวอนามัยและความปลอดภัย</option>
+                                        <option value="ส่วนกฎหมายและระเบียบ">ส่วนกฎหมายและระเบียบ</option>
+                                        <option value="ส่วนมาตรฐานและวิชาการ">ส่วนมาตรฐานและวิชาการ</option>
+                                        <option value="ส่วนโครงการพิเศษ">ส่วนโครงการพิเศษ</option>
+                                        <option value="แผนกOne Stop Service 1">แผนกOne Stop Service 1</option>
+                                        <option value="แผนกOne Stop Service 2">แผนกOne Stop Service 2</option>
+                                        <option value="แผนกOne Stop Service 3">แผนกOne Stop Service 3</option>
+                                        <option value="แผนกตลาดไท">แผนกตลาดไท</option>
+                                        <option value="ประสานงานขายและพัฒนาธุรกิจ 1">ประสานงานขายและพัฒนาธุรกิจ 1</option>
+                                        <option value="ประสานงานขายและพัฒนาธุรกิจ 2">ประสานงานขายและพัฒนาธุรกิจ 2</option>
+                                        <option value="กรรมการผู้อำนวยการ">กรรมการผู้อำนวยการ</option>
+                                        <option value="รองกรรมการผู้อำนวยการ สายงานปฏิบัติการ">รองกรรมการผู้อำนวยการ สายงานปฏิบัติการ</option>
+                                        <option value="รองกรรมการผู้อำนวยการ สายงานบริหาร">รองกรรมการผู้อำนวยการ สายงานบริหาร</option>
+                                        <option value="ส่วนตรวจสอบภายใน">ส่วนตรวจสอบภายใน</option>
+                                        <option value="ผู้เชี่ยวชาญ">ผู้เชี่ยวชาญ</option>
+                                        <option value="ที่ปรึกษาบริษัทฯ">ที่ปรึกษาบริษัทฯ</option>
+                                        <option value="คณะกรรมการ">คณะกรรมการ</option>
+                                        <option value="กลุ่มงาน One Stop Service">กลุ่มงาน One Stop Service</option>
+                                        <option value="กลุ่มงาน กฎหมายและคดีความ">กลุ่มงาน กฎหมายและคดีความ</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">หัวข้อการประชุม</label>
+                            <input type="text" name="name" class="form-control" placeholder="เรื่องที่ต้องการประชุม" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">เลือก Zoom Account</label>
+                            <select name="room" class="form-select" required>
+                                <option value="" selected disabled>-- เลือก --</option>
+                                <option value="Zoom Account 1">Zoom Account 1</option>
+                                <option value="Zoom Account 2">Zoom Account 2</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">วันที่จอง</label>
+                            <input type="text" id="dp_modal" name="date" class="form-control" placeholder="เลือกวันที่" readonly required>
+                        </div>
+                        <div class="row g-2 mb-4">
+                            <div class="col-6">
+                                <label class="form-label">เริ่ม</label>
+                                <input type="text" id="start_time_modal" name="start_time" class="form-control" placeholder="เวลาเริ่ม" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">ถึง</label>
+                                <input type="text" id="end_time_modal" name="end_time" class="form-control" placeholder="เวลาสิ้นสุด" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fa-solid fa-check-circle me-2"></i>บันทึกการจอง
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
+
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">หัวข้อการประชุม</label>
+                            <input type="text" name="name" class="form-control" placeholder="เรื่องที่ต้องการประชุม" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">เลือก Zoom Account</label>
+                            <select name="room" class="form-select" required>
+                                <option value="" selected disabled>-- เลือก --</option>
+                                <option value="Zoom Account 1">Zoom Account 1</option>
+                                <option value="Zoom Account 2">Zoom Account 2</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">วันที่จอง</label>
+                            <input type="text" id="dp_modal" name="date" class="form-control" placeholder="เลือกวันที่" readonly required>
+                        </div>
+                        <div class="row g-2 mb-4">
+                            <div class="col-6">
+                                <label class="form-label">เริ่ม</label>
+                                <input type="text" id="start_time_modal" name="start_time" class="form-control" placeholder="เวลาเริ่ม" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">ถึง</label>
+                                <input type="text" id="end_time_modal" name="end_time" class="form-control" placeholder="เวลาสิ้นสุด" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fa-solid fa-check-circle me-2"></i>บันทึกการจอง
+                        </button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
