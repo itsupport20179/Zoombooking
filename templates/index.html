@@ -239,11 +239,12 @@
         .fc-event:hover { background-color: #1d4ed8 !important; }
 
         .fc-event-simple {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 600;
             text-align: center;
+            line-height: 1.2;
         }
-        .fc-event-simple i { color: #fbbf24; margin-right: 3px; }
+        .fc-event-simple i { color: #dc2626; margin-right: 3px; }
 
         .fc .fc-daygrid-more-link {
             color: var(--accent-blue);
@@ -607,7 +608,7 @@
                     return '<i class="fa-solid fa-thumbtack" style="color: #dc2626;"></i> ' + arg.num;
                 },
                 eventContent: function(arg) {
-                    return '<div class="fc-event-simple">📌 1 รายการ</div>';
+                    return '<div class="fc-event-simple"><i class="fa-solid fa-thumbtack"></i> 1 รายการ</div>';
                 },
                 dateClick: (info) => { openBookingModal(info.dateStr); }
             });
