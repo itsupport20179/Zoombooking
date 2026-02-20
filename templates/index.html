@@ -597,7 +597,7 @@
                 initialView: 'dayGridMonth',
                 locale: 'th',
                 events: '/api/bookings',
-                dayMaxEvents: true,
+                dayMaxEvents: false,
                 headerToolbar: {
                     left: 'title',
                     center: '',
@@ -605,10 +605,27 @@
                 },
                 moreLinkClick: 'popover',
                 moreLinkContent: function(arg) {
-                    return '<i class="fa-solid fa-thumbtack" style="color: #dc2626;"></i> ' + arg.num;
+                    return { html: '<i class="fa-solid fa-thumbtack" style="color: #dc2626;"></i> ' + arg.num };
                 },
-                eventContent: function(arg) {
-                    return '<div class="fc-event-simple"><i class="fa-solid fa-thumbtack"></i> 1 รายการ</div>';
+                eventDidMount: function(info) {
+                    // นับจำนวน event ทั้งหมดในวันนั้น
+                    const dateStr = info.event.startStr.substring(0, 10);
+                    const dayEvents = info.view.getEvents().filter(e => 
+                        e.startStr.substring(0, 10) === dateStr
+                    );
+                    const count = dayEvents.length;
+                    
+                    // อัพเดท event ทุกอันในวันนั้นให้แสดงจำนวนรวม
+                    dayEvents.forEach((event, index) => {
+                        const el = event.getProp('el');
+                        if (el) {
+                            el.querySelector('.fc-event-title')?.remove();
+                            const span = document.createElement('span');
+                            span.className = 'fc-event-title';
+                            span.innerHTML = '<i class="fa-solid fa-thumbtack"></i> ' + count + ' รายการ';
+                            el.appendChild(span);
+                        }
+                    });
                 },
                 dateClick: (info) => { openBookingModal(info.dateStr); }
             });
