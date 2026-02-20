@@ -240,20 +240,28 @@
 
         .fc-event .fc-event-title { display: none; }
 
-        .day-booking-badge {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 0.75rem;
-            font-weight: 700;
-            color: #dc2626;
-            text-align: center;
-            padding: 4px 8px;
-            z-index: 5;
-            pointer-events: none;
+        .booking-badge { 
+            background: #dbeafe; 
+            color: #1e40af; 
+            border-radius: 8px; 
+            padding: 6px; 
+            font-size: 11px; 
+            font-weight: 600; 
+            text-align: center; 
+            cursor: pointer; 
+            display: block; 
+            margin-top: 3px; 
+            border: 1px solid #bfdbfe; 
+            transition: transform 0.2s ease; 
         }
-        .day-booking-badge i { margin-right: 3px; }
+        .booking-badge:hover { 
+            animation: bounce 0.5s infinite; 
+            background: #bfdbfe; 
+        }
+        @keyframes bounce { 
+            0%, 100% { transform: translateY(0); } 
+            50% { transform: translateY(-5px); } 
+        }
 
         .fc-event-simple {
             font-size: 0.7rem;
@@ -617,26 +625,21 @@
                 initialView: 'dayGridMonth',
                 locale: 'th',
                 events: '/api/bookings',
-                dayMaxEvents: false,
+                dayMaxEvents: 0,
                 headerToolbar: {
                     left: 'title',
                     center: '',
                     right: 'today prev,next'
                 },
                 moreLinkClick: 'popover',
-                moreLinkContent: function(arg) {
-                    return { html: '<i class="fa-solid fa-thumbtack" style="color: #dc2626;"></i> ' + arg.num };
+                moreLinkContent: function(arg) { 
+                    return { html: '<div class="booking-badge">📌 ' + arg.num + ' รายการ</div>' }; 
                 },
-                dayCellDidMount: function(arg) {
-                    const dateStr = arg.date.toISOString().substring(0, 10);
-                    fetch('/api/bookings').then(r => r.json()).then(data => {
-                        const count = data.filter(b => b.start.startsWith(dateStr)).length;
-                        if (count > 0) {
-                            const badge = document.createElement('div');
-                            badge.className = 'day-booking-badge';
-                            badge.innerHTML = '<i class="fa-solid fa-thumbtack"></i> ' + count + ' รายการ';
-                            arg.el.appendChild(badge);
-                        }
+                moreLinkDidMount: function(arg) {
+                    arg.el.addEventListener('click', function(e) {
+                        e.preventDefault(); e.stopPropagation();
+                        const dateStr = arg.el.closest('.fc-daygrid-day').getAttribute('data-date');
+                        openBookingModal(dateStr);
                     });
                 },
                 dateClick: (info) => { openBookingModal(info.dateStr); }
