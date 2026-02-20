@@ -614,18 +614,15 @@
             dateFormat: "Y-m-d"
         });
         
-        // Time pickers - both type and select
+        // Time pickers - both type and select, full 24 hours
         const timeCfg = {
             enableTime: true,
             noCalendar: true,
             dateFormat: "H:i",
-            time_24hr: true,
-            minTime: "08:30",
-            maxTime: "17:30",
-            wrap: true
+            time_24hr: true
         };
-        flatpickr("#start_time", { ...timeCfg, defaultDate: "08:30" });
-        flatpickr("#end_time", { ...timeCfg, defaultDate: "09:00" });
+        flatpickr("#start_time", { ...timeCfg, defaultDate: "00:00" });
+        flatpickr("#end_time", { ...timeCfg, defaultDate: "01:00" });
 
         // FullCalendar
         document.addEventListener('DOMContentLoaded', function() {
