@@ -362,6 +362,9 @@
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container-fluid px-4">
+            <button class="btn text-white me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#bookingSidebar" aria-controls="bookingSidebar">
+                <i class="fa-solid fa-bars fa-lg"></i>
+            </button>
             <span class="navbar-brand fw-bold d-flex align-items-center">
                 <i class="fa-solid fa-video me-2" style="color: #60a5fa;"></i> ZOOM BOOKING
             </span>
@@ -392,17 +395,8 @@
 
         <!-- Content Row -->
         <div class="row g-4">
-            <!-- Booking Form -->
-            <div class="col-lg-4">
-                <div class="card">
-                    <div class="card-header-custom">
-                        <h5 class="card-title">
-                            <i class="fa-solid fa-calendar-plus me-2"></i>
-                            จอง Zoom Account
-                        </h5>
-                    </div>
-                    <div class="card-body-custom">
-                        <form action="/book" method="POST" class="needs-validation" novalidate>
+            <!-- Calendar -->
+            <div class="col-12">
                             <div class="mb-3">
                                 <label class="form-label">ชื่อผู้จอง</label>
                                 <div class="input-group">
@@ -529,7 +523,7 @@
             </div>
 
             <!-- Calendar -->
-            <div class="col-lg-8">
+            <div class="col-12">
                 <div class="calendar-container">
                     <div id="calendar"></div>
                 </div>
@@ -623,6 +617,11 @@
         };
         flatpickr("#start_time", { ...timeCfg, defaultDate: "00:00" });
         flatpickr("#end_time", { ...timeCfg, defaultDate: "01:00" });
+        
+        // Sidebar time pickers
+        flatpickr("#dp_sidebar", { minDate: "today", dateFormat: "Y-m-d" });
+        flatpickr("#start_time_sidebar", { ...timeCfg, defaultDate: "00:00" });
+        flatpickr("#end_time_sidebar", { ...timeCfg, defaultDate: "01:00" });
 
         // FullCalendar
         document.addEventListener('DOMContentLoaded', function() {
@@ -705,5 +704,74 @@
             })
         })()
     </script>
+
+    <!-- Offcanvas Sidebar for Booking -->
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="bookingSidebar" aria-labelledby="bookingSidebarLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="bookingSidebarLabel">
+                <i class="fa-solid fa-calendar-plus me-2"></i>จอง Zoom Account
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <form action="/book" method="POST" class="needs-validation" novalidate>
+                <div class="mb-3">
+                    <label class="form-label">ชื่อผู้จอง</label>
+                    <input type="text" name="requester_name" class="form-control" placeholder="ระบุชื่อ-นามสกุล" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">ส่วน/สาขา</label>
+                    <select name="department" class="form-select" required>
+                        <option value="" disabled selected>-- เลือกส่วน/สาขา --</option>
+                        <option value="ส่วนบัญชี">ส่วนบัญชี</option>
+                        <option value="สำนักงานสาขา">สำนักงานสาขา</option>
+                        <option value="ส่วนปฏิบัติการทดสอบ">ส่วนปฏิบัติการทดสอบ</option>
+                        <option value="สำนักงานบริการคุณภาพระบบมาตรฐาน">สำนักงานบริการคุณภาพระบบมาตรฐาน</option>
+                        <option value="ส่วนบริการสอบเทียบเครื่องมือ">ส่วนบริการสอบเทียบเครื่องมือ</option>
+                        <option value="ส่วนตรวจประเมินและรับรองระบบ">ส่วนตรวจประเมินและรับรองระบบ</option>
+                        <option value="แผนกประมง">แผนกประมง</option>
+                        <option value="แผนกพืช-ข้าว">แผนกพืช-ข้าว</option>
+                        <option value="แผนกGHPs/HACCP">แผนกGHPs/HACCP</option>
+                        <option value="ส่วนฝึกอบรมและมาตรฐาน">ส่วนฝึกอบรมและมาตรฐาน</option>
+                        <option value="แผนกฝึกอบรมและบริการที่ปรึกษาห้องปฏิบัติการ">แผนกฝึกอบรมและบริการที่ปรึกษาห้องปฏิบัติการ</option>
+                        <option value="แผนกทดสอบความชำนาญห้องปฏิบัติการ">แผนกทดสอบความชำนาญห้องปฏิบัติการ</option>
+                        <option value="แผนกวิชาการและการประกันคุณภาพห้องปฏิบัติการ">แผนกวิชาการและการประกันคุณภาพห้องปฏิบัติการ</option>
+                        <option value="แผนกมาตรฐานสุขาภิบาลอาหาร">แผนกมาตรฐานสุขาภิบาลอาหาร</option>
+                        <option value="สำนักงานพาณิชย์และยุทธศาสตร์">สำนักงานพาณิชย์และยุทธศาสตร์</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">หัวข้อการประชุม</label>
+                    <input type="text" name="name" class="form-control" placeholder="เรื่องที่ต้องการประชุม" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">เลือก Zoom Account</label>
+                    <select name="room" class="form-select" required>
+                        <option value="" selected disabled>-- เลือก --</option>
+                        <option value="Zoom Account 1">Zoom Account 1</option>
+                        <option value="Zoom Account 2">Zoom Account 2</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">วันที่จอง</label>
+                    <input type="text" id="dp_sidebar" name="date" class="form-control" placeholder="เลือกวันที่" readonly required>
+                </div>
+                <div class="row g-2 mb-4">
+                    <div class="col-6">
+                        <label class="form-label">เริ่ม</label>
+                        <input type="text" id="start_time_sidebar" name="start_time" class="form-control" placeholder="เวลาเริ่ม" required>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">ถึง</label>
+                        <input type="text" id="end_time_sidebar" name="end_time" class="form-control" placeholder="เวลาสิ้นสุด" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fa-solid fa-check-circle me-2"></i>บันทึกการจอง
+                </button>
+            </form>
+        </div>
+    </div>
+
 </body>
 </html>
