@@ -238,6 +238,13 @@
 
         .fc-event:hover { background-color: #1d4ed8 !important; }
 
+        .fc-event-simple {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+        }
+        .fc-event-simple i { color: #fbbf24; margin-right: 3px; }
+
         .fc .fc-daygrid-more-link {
             color: var(--accent-blue);
             font-weight: 600;
@@ -598,6 +605,9 @@
                 moreLinkClick: 'popover',
                 moreLinkContent: function(arg) {
                     return '<i class="fa-solid fa-thumbtack" style="color: #dc2626;"></i> ' + arg.num;
+                },
+                eventContent: function(arg) {
+                    return '<div class="fc-event-simple">📌 1 รายการ</div>';
                 },
                 dateClick: (info) => { openBookingModal(info.dateStr); }
             });
