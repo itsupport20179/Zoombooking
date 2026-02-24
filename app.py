@@ -12,10 +12,8 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# ต้องตั้งค่า SECRET_KEY จาก environment variable
-if not os.environ.get('SECRET_KEY'):
-    raise ValueError("SECRET_KEY environment variable is not set!")
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
+# SECRET_KEY - ใช้จาก environment variable หรือ fallback สำหรับ development
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'zoom_booking_dev_fallback_key_2026_do_not_use_in_production')
 
 # ใช้ SQLite
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
