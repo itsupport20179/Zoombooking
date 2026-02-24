@@ -1,31 +1,32 @@
+import os
+import uuid
+from functools import wraps
 from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from sqlalchemy import text, and_, or_
-from functools import wraps
-import os
-import uuid
-
-# โหลด environment variables จาก .env file (สำหรับ local development)
 from dotenv import load_dotenv
+
 load_dotenv()
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'zoom_booking_dev_fallback_key_2026')
 
-# SECRET_KEY - ใช้จาก environment variable หรือ fallback สำหรับ development
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'zoom_booking_dev_fallback_key_2026_do_not_use_in_production')
+# --- แก้ไขเฉพาะส่วนนี้: เชื่อมต่อ Supabase แทน SQLite ---
+uri = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
+if uri and uri.startswith("postgres://"):
+    uri = uri.replace("postgres://", "postgresql://", 1)
 
-# ใช้ SQLite
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- Models ---
+# --- Models (คงเดิมทุกประการ) ---
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True)
     password = db.Column(db.String(255))
-    role = db.Column(db.String(10)) # 'admin' or 'user'
+    role = db.Column(db.String(10)) 
     current_session_id = db.Column(db.String(100), nullable=True)
 
 class Booking(db.Model):
@@ -41,15 +42,17 @@ class Booking(db.Model):
 
 with app.app_context():
     db.create_all()
-    # สร้าง Admin ตัวแรกถ้ายังไม่มี
+    # สร้าง Admin ตัวแรกถ้ายังไม่มี (รหัส itsupport)
     if not User.query.filter_by(username='admin').first():
-        admin_password = os.environ.get('ADMIN_PASSWORD', '123456')  # Default: 123456
+        admin_password = os.environ.get('ADMIN_PASSWORD', 'itsupport')
         db.session.add(User(
             username='admin',
             password=generate_password_hash(admin_password),
             role='admin'
         ))
     db.session.commit()
+
+# --- หลังจากจุดนี้ไปคือ Logic เดิมที่คุณมี ห้ามแก้/ลบ ให้คงไว้เหมือนเดิม ---
 
 # --- Middleware ---
 def login_required(f):
