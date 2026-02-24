@@ -44,15 +44,18 @@ class Booking(db.Model):
 
 with app.app_context():
     db.create_all()
-    # ตรวจสอบ admin (จะข้ามไปถ้ามีใน SQL แล้ว)
-    if not User.query.filter_by(username='admin').first():
-        admin_password = os.environ.get('ADMIN_PASSWORD', 'itsupport')
-        db.session.add(User(
+    # เช็คว่ามี admin หรือยัง ถ้าไม่มีให้สร้างใหม่ด้วยรหัส itsupport
+    admin_user = User.query.filter_by(username='admin').first()
+    if not admin_user:
+        print("Creating admin user...")
+        new_admin = User(
             username='admin',
-            password=generate_password_hash(admin_password),
+            password=generate_password_hash('itsupport'), # ใช้ฟังก์ชันของ Python โดยตรง
             role='admin'
-        ))
-    db.session.commit()
+        )
+        db.session.add(new_admin)
+        db.session.commit()
+        print("Admin created successfully!")
 
 # --- ส่วน Logic ด้านล่าง (Middleware, Routes) ห้ามแก้และใช้ของเดิมทั้งหมด ---
 # --- หลังจากจุดนี้ไปคือ Logic เดิมที่คุณมี ห้ามแก้/ลบ ให้คงไว้เหมือนเดิม ---
