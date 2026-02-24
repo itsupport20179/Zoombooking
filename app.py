@@ -12,7 +12,7 @@ load_dotenv()
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'zoom_booking_dev_fallback_key_2026')
 
-# --- แก้ไขเฉพาะส่วนนี้: เชื่อมต่อ Supabase แทน SQLite ---
+# --- ส่วนเชื่อมต่อ Supabase ---
 uri = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
 if uri and uri.startswith("postgres://"):
     uri = uri.replace("postgres://", "postgresql://", 1)
@@ -21,8 +21,9 @@ app.config['SQLALCHEMY_DATABASE_URI'] = uri
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-# --- Models (คงเดิมทุกประการ) ---
+# --- Models (ระบุชื่อตารางให้ตรงกับ SQL เป๊ะๆ) ---
 class User(db.Model):
+    __tablename__ = 'user'  # บังคับใช้ชื่อตารางว่า user (ไม่มี s)
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True)
     password = db.Column(db.String(255))
@@ -30,6 +31,7 @@ class User(db.Model):
     current_session_id = db.Column(db.String(100), nullable=True)
 
 class Booking(db.Model):
+    __tablename__ = 'booking' # บังคับใช้ชื่อตารางว่า booking (ไม่มี s)
     id = db.Column(db.Integer, primary_key=True)
     requester_name = db.Column(db.String(100))
     department = db.Column(db.String(100))
@@ -42,7 +44,7 @@ class Booking(db.Model):
 
 with app.app_context():
     db.create_all()
-    # สร้าง Admin ตัวแรกถ้ายังไม่มี (รหัส itsupport)
+    # ตรวจสอบ admin (จะข้ามไปถ้ามีใน SQL แล้ว)
     if not User.query.filter_by(username='admin').first():
         admin_password = os.environ.get('ADMIN_PASSWORD', 'itsupport')
         db.session.add(User(
@@ -52,6 +54,7 @@ with app.app_context():
         ))
     db.session.commit()
 
+# --- ส่วน Logic ด้านล่าง (Middleware, Routes) ห้ามแก้และใช้ของเดิมทั้งหมด ---
 # --- หลังจากจุดนี้ไปคือ Logic เดิมที่คุณมี ห้ามแก้/ลบ ให้คงไว้เหมือนเดิม ---
 
 # --- Middleware ---
