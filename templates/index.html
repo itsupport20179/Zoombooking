@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | Zoom Booking System</title>
+    <title>📹 Zoom Booking - Home</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232563eb'><path d='M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'/></svg>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
@@ -445,6 +446,52 @@
             font-size: 0.95rem;
             border-radius: 10px;
         }
+
+        /* ============ New Permanent Sidebar Style ============ */
+        @media (min-width: 992px) {
+            .sidebar-permanent {
+                position: fixed;
+                top: 72px;
+                left: 0;
+                width: 260px;
+                height: calc(100vh - 72px);
+                background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+                border-right: 1px solid rgba(255,255,255,0.1);
+                z-index: 1000;
+                padding: 20px;
+                transition: all 0.3s ease;
+            }
+
+            .main-container {
+                margin-left: 260px !important;
+                max-width: calc(100% - 260px);
+            }
+
+            .btn-hamburger-mobile {
+                display: none;
+            }
+            
+            .sidebar-permanent .btn-booking-side {
+                background: var(--accent-blue);
+                border: none;
+                padding: 12px;
+                font-weight: 600;
+                border-radius: 10px;
+                color: white;
+                width: 100%;
+                transition: all 0.3s ease;
+            }
+            .sidebar-permanent .btn-booking-side:hover {
+                background: #1d4ed8;
+                transform: translateY(-2px);
+            }
+        }
+
+        @media (max-width: 991px) {
+            .sidebar-permanent {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body class="pb-4">
@@ -452,7 +499,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
         <div class="container-fluid px-4">
             <div class="d-flex align-items-center">
-                <button class="btn text-white" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu">
+                <button class="btn text-white btn-hamburger-mobile d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarMenu">
                     <i class="fa-solid fa-bars fa-lg"></i>
                 </button>
                 <span class="navbar-brand fw-bold d-flex align-items-center mb-0">
@@ -476,7 +523,18 @@
         </div>
     </nav>
 
-    <!-- Offcanvas Sidebar -->
+    <!-- Permanent Sidebar for Desktop -->
+    <div class="sidebar-permanent d-none d-lg-block">
+        <h5 class="text-white mb-4" style="font-size: 1rem; opacity: 0.8;">
+            <i class="fa-solid fa-bars-staggered me-2"></i>เมนูหลัก
+        </h5>
+        <button type="button" class="btn-booking-side" data-bs-toggle="modal" data-bs-target="#bookingModal">
+            <i class="fa-solid fa-calendar-plus me-2"></i>จอง Zoom Account
+        </button>
+        <hr style="border-color: rgba(255,255,255,0.1);">
+    </div>
+
+    <!-- Offcanvas Sidebar for Mobile -->
     <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarMenu" aria-labelledby="sidebarLabel">
         <div class="offcanvas-header">
             <h5 class="offcanvas-title" id="sidebarLabel">
@@ -496,7 +554,7 @@
         <!-- Page Title -->
         <div class="page-title">
             <i class="fa-solid fa-calendar-check"></i>
-            ระบบจอง Zoom Account
+            จอง Zoom Account
         </div>
 
         <!-- Calendar Only -->
