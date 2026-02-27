@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zoom Booking - Admin Panel</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%232563eb'><path d='M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z'/></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        :root {
+            --primary-dark: #0f172a;
+            --accent-blue: #2563eb;
+            --text-slate: #475569;
+            --bg-white: #ffffff;
+            --bg-light: #f8fafc;
+            --border-color: #e2e8f0;
+        }
+
+        * { font-family: 'Sarabun', sans-serif; }
+
+        body {
+            background: var(--bg-light);
+            color: var(--primary-dark);
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* ============ Navbar ============ */
+        .navbar {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+            padding: 12px 0;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+
+        .navbar-brand {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .user-badge {
+            background: rgba(255,255,255,0.1);
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .btn-nav {
+            padding: 6px 14px;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+            border: none;
+        }
+
+        .btn-home {
+            background: #2563eb;
+            color: white;
+        }
+
+        .btn-home:hover {
+            background: #1d4ed8;
+            color: white;
+        }
+
+        .btn-logout {
+            background: transparent;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2) !important;
+        }
+
+        .btn-logout:hover {
+            background: #dc2626;
+            border-color: #dc2626 !important;
+            color: white;
+        }
+
+        /* ============ Main Container ============ */
+        .main-container {
+            padding: 24px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .page-title i { color: var(--accent-blue); }
+
+        /* ============ Tab Navigation ============ */
+        .tab-navigation {
+            background: var(--bg-white);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            border: 1px solid var(--border-color);
+            color: var(--text-slate);
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 8px;
+            background: var(--bg-white);
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .nav-btn.active {
+            background-color: var(--accent-blue);
+            color: white;
+            border-color: var(--accent-blue);
+        }
+
+        .search-box {
+            position: relative;
+            flex-grow: 1;
+            max-width: 260px;
+            margin-left: auto;
+        }
+
+        .search-input {
+            border-radius: 8px;
+            padding-left: 36px;
+            border: 1px solid var(--border-color);
+            height: 38px;
+            font-size: 0.85rem;
+            width: 100%;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        .btn-add {
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .btn-add:hover {
+            background: #059669;
+            color: white;
+        }
+
+        /* ============ Date Filter Bar ============ */
+        .date-filter-bar {
+            background: var(--bg-white);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .date-filter-bar label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-slate);
+            margin: 0;
+        }
+
+        .date-filter-input {
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            height: 36px;
+        }
+
+        .date-filter-input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+
+        .btn-filter {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-filter:hover { background: #1d4ed8; }
+
+        .btn-filter-clear {
+            background: #f1f5f9;
+            color: var(--text-slate);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-filter-clear:hover { background: #e2e8f0; }
+
+        .filter-info {
+            font-size: 0.8rem;
+            color: var(--text-slate);
+            margin-left: auto;
+        }
+
+        /* ============ Content Card ============ */
+        .content-card {
+            background: var(--bg-white);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .content-header {
+            background: var(--primary-dark);
+            padding: 12px 20px;
+        }
+
+        .content-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: white;
+            margin: 0;
+        }
+
+        /* ============ Day Group ============ */
+        .day-group {
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .day-group:last-child { border-bottom: none; }
+
+        .day-header {
+            background: var(--bg-light);
+            padding: 10px 20px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .day-header i { color: var(--accent-blue); }
+
+        .day-header.today-header {
+            background: #eff6ff;
+            border-left: 4px solid var(--accent-blue);
+        }
+
+        .day-count {
+            margin-left: auto;
+            background: var(--accent-blue);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+        }
+
+        .today-badge {
+            background: #10b981;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        /* ============ Table ============ */
+        .table-custom {
+            margin-bottom: 0;
+        }
+
+        .table-custom thead th {
+            background: #f8fafc;
+            border: none;
+            padding: 10px 16px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: var(--text-slate);
+            text-transform: uppercase;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .table-custom tbody td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.85rem;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .table-custom tbody tr:hover { background: #f8fafc; }
+
+        .badge-room {
+            background: var(--primary-dark);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .badge-time {
+            background: #e0e7ff;
+            color: #4338ca;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .badge-admin {
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .badge-user {
+            background: #f1f5f9;
+            color: var(--text-slate);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        /* ============ Action Buttons ============ */
+        .btn-action {
+            padding: 5px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border: 1px solid;
+            cursor: pointer;
+        }
+
+        .btn-edit {
+            color: var(--accent-blue);
+            background: white;
+            border-color: #dbeafe;
+        }
+
+        .btn-edit:hover {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .btn-delete {
+            color: #dc2626;
+            background: white;
+            border-color: #fee2e2;
+        }
+
+        .btn-delete:hover {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-approve {
+            color: #16a34a;
+            background: white;
+            border-color: #dcfce7;
+            margin-bottom: 4px;
+        }
+
+        .btn-approve:hover {
+            background: #16a34a;
+            color: white;
+        }
+
+        .badge-approved {
+            background: #dcfce7;
+            color: #16a34a;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 4px;
+        }
+
+        /* ============ Modal ============ */
+        .modal-content {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        }
+
+        .modal-header {
+            background: var(--primary-dark);
+            border: none;
+            padding: 14px 20px;
+            border-radius: 16px 16px 0 0;
+        }
+
+        .modal-title {
+            font-weight: 600;
+            color: white;
+            font-size: 0.95rem;
+        }
+
+        .modal-body { padding: 20px; }
+
+        .modal-footer {
+            border-top: 1px solid var(--border-color);
+            padding: 14px 20px;
+        }
+
+        .form-label-custom {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-slate);
+            margin-bottom: 6px;
+        }
+
+        .form-control-custom, .form-select-custom {
+            border-radius: 8px;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+
+        .form-control-custom:focus, .form-select-custom:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+
+        .btn-modal {
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary-modal {
+            background: var(--accent-blue);
+            color: white;
+            border: none;
+        }
+
+        .btn-primary-modal:hover { background: #1d4ed8; color: white; }
+
+        .btn-success-modal {
+            background: #10b981;
+            color: white;
+            border: none;
+        }
+
+        .btn-success-modal:hover { background: #059669; color: white; }
+
+        .btn-light-modal {
+            background: #f1f5f9;
+            color: var(--text-slate);
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn-light-modal:hover { background: #e2e8f0; }
+
+        /* ============ Empty State ============ */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+        }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        /* ============ Footer ============ */
+        .footer-text {
+            text-align: center;
+            padding: 20px;
+            color: #94a3b8;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-container { padding: 16px; }
+            .search-box { max-width: 100%; margin-left: 0; }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container-fluid px-4">
+            <span class="navbar-brand fw-bold d-flex align-items-center">
+                <i class="fa-solid fa-video me-2" style="color: #60a5fa;"></i> ZOOM BOOKING
+                <span class="badge bg-primary ms-2 rounded-pill" style="font-size:0.65rem; vertical-align: middle;">Admin</span>
+            </span>
+            <div class="d-flex align-items-center gap-2">
+                <a href="/" class="btn btn-nav btn-home btn-sm">
+                    <i class="fa-solid fa-house me-1"></i> หน้าหลัก
+                </a>
+                <a href="/logout" class="btn btn-nav btn-logout btn-sm" onclick="return confirmLogout(event)">
+                    <i class="fa-solid fa-arrow-right-from-bracket me-1"></i> ออก
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Page Title -->
+        <div class="page-title">
+            <i class="fa-solid fa-gear"></i>
+            ผู้ดูแลระบบ
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button type="button" class="nav-btn active" id="btn-booking" onclick="switchSection('booking', this)">
+                <i class="fa-solid fa-list me-1"></i> รายการจอง
+            </button>
+            <button type="button" class="nav-btn" id="btn-user" onclick="switchSection('user', this)">
+                <i class="fa-solid fa-users-gear me-1"></i> จัดการผู้ใช้
+            </button>
+
+            <!-- Booking Search -->
+            <div class="search-box booking-controls">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="searchInput" class="form-control search-input" placeholder="ค้นหาชื่อผู้จอง..." onkeyup="filterData()">
+            </div>
+
+            <!-- User Controls -->
+            <div class="search-box user-controls" style="display: none;">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="searchUserInput" class="form-control search-input" placeholder="ค้นหาผู้ใช้..." onkeyup="filterUser()">
+            </div>
+            <button class="btn btn-add user-controls" style="display: none;" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                <i class="fa-solid fa-user-plus me-1"></i> เพิ่มผู้ใช้
+            </button>
+        </div>
+
+        <!-- Date Filter Bar (Booking Section only) -->
+        <div class="date-filter-bar booking-controls" id="dateFilterBar">
+            <i class="fa-solid fa-calendar-days" style="color: var(--accent-blue);"></i>
+            <label>ดูรายการวันที่:</label>
+            <input type="date" id="dateFilterInput" class="form-control date-filter-input" style="width: auto;">
+            <button class="btn-filter" onclick="filterByDate()">
+                <i class="fa-solid fa-magnifying-glass me-1"></i> ค้นหา
+            </button>
+            <button class="btn-filter-clear" onclick="clearDateFilter()">
+                <i class="fa-solid fa-rotate-left me-1"></i> ดูทั้งหมด
+            </button>
+            <span class="filter-info" id="filterInfo"></span>
+        </div>
+
+        <!-- Booking Section -->
+        <div class="content-card booking-section">
+            <div class="content-header">
+                <h5 class="content-title">
+                    <i class="fa-solid fa-calendar-alt me-2"></i>
+                    รายการจอง Zoom Account
+                </h5>
+            </div>
+            <div id="bookingContent">
+                {% if bookings %}
+                    {% set ns = namespace(current_date='') %}
+                    {% for b in bookings|sort(attribute='date') %}
+                        {% if b.date != ns.current_date %}
+                            {% if not loop.first %}</tbody></table></div>{% endif %}
+                            {% set ns.current_date = b.date %}
+                            <div class="day-group" data-date="{{ b.date }}">
+                                <div class="day-header" id="day-{{ b.date }}">
+                                    <i class="fa-solid fa-calendar-day"></i>
+                                    {{ b.date }}
+                                    <span class="day-count">{{ bookings|selectattr('date', 'equalto', b.date)|list|length }} รายการ</span>
+                                </div>
+                                <table class="table table-custom">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-center">เวลา</th>
+                                            <th class="text-center">Zoom Account</th>
+                                            <th class="text-center">หัวข้อ / ส่วน/สาขา</th>
+                                            <th class="text-center">ผู้จอง</th>
+                                            <th class="text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        {% endif %}
+                        <tr class="booking-row" data-date="{{ b.date }}">
+                            <td class="text-center"><span class="badge-time">{{ b.start_time }} - {{ b.end_time }}</span></td>
+                            <td class="text-center"><span class="badge-room">{{ b.room }}</span></td>
+                            <td>
+                                <div class="fw-bold">{{ b.name }}</div>
+                                <div class="text-muted" style="font-size: 0.8rem;">{{ b.department }}</div>
+                            </td>
+                            <td class="text-center fw-bold">{{ b.requester_name }}</td>
+                            <td class="text-center">
+                                {% if b.status == 'pending' %}
+                                    <button type="button" class="btn-action btn-approve"
+                                        onclick="openApproveModal('{{ b.id }}', '{{ b.requester_name }}', '{{ b.name }}')">
+                                        <i class="fa-solid fa-check"></i> อนุมัติ
+                                    </button>
+                                {% elif b.status == 'approved' %}
+                                    <span class="badge-approved"><i class="fa-solid fa-check-circle"></i> อนุมัติแล้ว</span>
+                                    <div class="text-muted" style="font-size: 0.7rem; margin-top: 4px;">
+                                        <strong>Zoom:</strong> {{ b.zoom_email }}
+                                    </div>
+                                {% endif %}
+                                <button type="button" class="btn-action btn-edit" 
+                                    onclick="openEditModal('{{ b.id }}', '{{ b.requester_name }}', '{{ b.department }}', '{{ b.name }}', '{{ b.room }}', '{{ b.date }}', '{{ b.start_time }}', '{{ b.end_time }}')">
+                                    <i class="fa-solid fa-pen"></i> แก้ไข
+                                </button>
+                                <button type="button" class="btn-action btn-delete" onclick="confirmDelete('{{ b.id }}', '{{ b.requester_name }}')">
+                                    <i class="fa-solid fa-trash"></i> ลบ
+                                </button>
+                            </td>
+                        </tr>
+                        {% if loop.last %}</tbody></table></div>{% endif %}
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-state">
+                        <i class="fa-solid fa-calendar-xmark"></i>
+                        <p>ไม่มีรายการจอง</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- User Section -->
+        <div class="content-card user-section" style="display: none;">
+            <div class="content-header">
+                <h5 class="content-title">
+                    <i class="fa-solid fa-users me-2"></i>
+                    จัดการผู้ใช้งาน
+                </h5>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-custom">
+                    <thead>
+                        <tr>
+                            <th class="text-center">ลำดับ</th>
+                            <th class="text-center">Username</th>
+                            <th class="text-center">สถานะ</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if users %}
+                            {% for u in users %}
+                            <tr class="user-row">
+                                <td class="text-center text-muted">{{ loop.index }}</td>
+                                <td class="text-center fw-bold">
+                                    <i class="fa-solid fa-user text-muted me-2" style="font-size: 0.75rem;"></i>{{ u.username }}
+                                </td>
+                                <td class="text-center">
+                                    {% if u.role == 'admin' %}
+                                        <span class="badge-admin">Admin</span>
+                                    {% else %}
+                                        <span class="badge-user">User</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <button class="btn-action btn-edit" onclick="openEditUserModal('{{ u.id }}', '{{ u.username }}')">
+                                        <i class="fa-solid fa-pen"></i> แก้ไข
+                                    </button>
+                                    {% if session.get('user_id')|int != u.id|int %}
+                                    <button class="btn-action btn-delete" onclick="confirmDeleteUser('{{ u.id }}', '{{ u.username }}')">
+                                        <i class="fa-solid fa-trash"></i> ลบ
+                                    </button>
+                                    {% else %}
+                                    <span class="badge-user">ตัวคุณเอง</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="4" class="empty-state">
+                                    <i class="fa-solid fa-users-slash"></i>
+                                    <p>ไม่พบผู้ใช้งาน</p>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-text">
+            <i class="fa-solid fa-copyright"></i> 2026 IT Department. All Rights Reserved.
+        </div>
+    </div>
+
+    <!-- Approve & Send Zoom Account Modal -->
+    <div class="modal fade" id="approveModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fa-solid fa-paper-plane me-2"></i>
+                        อนุมัติและส่ง Account Zoom
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="approveForm" method="POST">
+                    <div class="modal-body">
+                        <p>คุณต้องการอนุมัติและส่ง Account Zoom ให้กับ:</p>
+                        <div class="alert alert-info">
+                            <strong>ผู้จอง:</strong> <span id="approve_requester"></span><br>
+                            <strong>หัวข้อ:</strong> <span id="approve_topic"></span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-custom">เลือก Zoom Account</label>
+                            <select name="zoom_account" class="form-select form-select-custom" required>
+                                <option value="" selected disabled>-- เลือก --</option>
+                                <option value="Zoom Account 1">Zoom Account 1</option>
+                                <option value="Zoom Account 2">Zoom Account 2</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light-modal btn-modal" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button type="submit" class="btn btn-primary-modal btn-modal">
+                            <i class="fa-solid fa-check"></i> อนุมัติและส่ง
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Booking Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fa-solid fa-pen-to-square me-2"></i>
+                        แก้ไขการจอง
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editForm" method="POST">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label-custom">ชื่อผู้จอง</label>
+                            <input type="text" name="requester_name" id="edit_requester" class="form-control form-control-custom" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-custom">ส่วน/สาขา</label>
+                            <select name="department" id="edit_dept" class="form-select form-select-custom" required>
+                                <option value="ส่วนบัญชี">ส่วนบัญชี</option>
+                                <option value="สำนักงานสาขา">สำนักงานสาขา</option>
+                                <option value="ส่วนปฏิบัติการทดสอบ">ส่วนปฏิบัติการทดสอบ</option>
+                                <option value="สำนักงานบริการคุณภาพระบบมาตรฐาน">สำนักงานบริการคุณภาพระบบมาตรฐาน</option>
+                                <option value="ส่วนบริการสอบเทียบเครื่องมือ">ส่วนบริการสอบเทียบเครื่องมือ</option>
+                                <option value="ส่วนตรวจประเมินและรับรองระบบ">ส่วนตรวจประเมินและรับรองระบบ</option>
+                                <option value="แผนกประมง">แผนกประมง</option>
+                                <option value="แผนกพืช-ข้าว">แผนกพืช-ข้าว</option>
+                                <option value="แผนกGHPs/HACCP">แผนกGHPs/HACCP</option>
+                                <option value="ส่วนฝึกอบรมและมาตรฐาน">ส่วนฝึกอบรมและมาตรฐาน</option>
+                                <option value="แผนกฝึกอบรมและบริการที่ปรึกษาห้องปฏิบัติการ">แผนกฝึกอบรมและบริการที่ปรึกษาห้องปฏิบัติการ</option>
+                                <option value="แผนกทดสอบความชำนาญห้องปฏิบัติการ">แผนกทดสอบความชำนาญห้องปฏิบัติการ</option>
+                                <option value="แผนกวิชาการและการประกันคุณภาพห้องปฏิบัติการ">แผนกวิชาการและการประกันคุณภาพห้องปฏิบัติการ</option>
+                                <option value="แผนกมาตรฐานสุขาภิบาลอาหาร">แผนกมาตรฐานสุขาภิบาลอาหาร</option>
+                                <option value="สำนักงานพาณิชย์และยุทธศาสตร์">สำนักงานพาณิชย์และยุทธศาสตร์</option>
+                                <option value="ส่วนประสานงานขายและพัฒนาธุรกิจ">ส่วนประสานงานขายและพัฒนาธุรกิจ</option>
+                                <option value="แผนกประสานงานขายและพัฒนาธุรกิจ">แผนกประสานงานขายและพัฒนาธุรกิจ</option>
+                                <option value="แผนกโครงการพิเศษ">แผนกโครงการพิเศษ</option>
+                                <option value="แผนกผู้เชี่ยวชาญด้านการขาย">แผนกผู้เชี่ยวชาญด้านการขาย</option>
+                                <option value="ส่วนสื่อสารธุรกิจองค์กร">ส่วนสื่อสารธุรกิจองค์กร</option>
+                                <option value="ส่วนแผน งบประมาณและการตลาด">ส่วนแผน งบประมาณและการตลาด</option>
+                                <option value="แผนกแผนและงบประมาณ">แผนกแผนและงบประมาณ</option>
+                                <option value="แผนกการตลาด">แผนกการตลาด</option>
+                                <option value="ส่วนการตลาดและประชาสัมพันธ์">ส่วนการตลาดและประชาสัมพันธ์</option>
+                                <option value="แผนกประชาสัมพันธ์">แผนกประชาสัมพันธ์</option>
+                                <option value="ส่วนขายและสนับสนุนการขายกรุงเทพและปริมณฑล">ส่วนขายและสนับสนุนการขายกรุงเทพและปริมณฑล</option>
+                                <option value="ส่วนขายและสนับสนุนการขายภูมิภาค">ส่วนขายและสนับสนุนการขายภูมิภาค</option>
+                                <option value="สำนักงานเทคโนโลยีและวิศวกรรม">สำนักงานเทคโนโลยีและวิศวกรรม</option>
+                                <option value="ส่วนเทคโนโลยีสารสนเทศ">ส่วนเทคโนโลยีสารสนเทศ</option>
+                                <option value="ส่วนเครื่องมือวิทยาศาสตร์">ส่วนเครื่องมือวิทยาศาสตร์</option>
+                                <option value="ส่วนงานอาคารสถานที่">ส่วนงานอาคารสถานที่</option>
+                                <option value="สำนักงานบัญชีและการเงิน">สำนักงานบัญชีและการเงิน</option>
+                                <option value="ส่วนการเงิน">ส่วนการเงิน</option>
+                                <option value="ส่วนจัดซื้อและพัสดุ">ส่วนจัดซื้อและพัสดุ</option>
+                                <option value="สำนักงานกรรมการผู้อำนวยการ">สำนักงานกรรมการผู้อำนวยการ</option>
+                                <option value="ส่วนธุรการและเลขานุการการประชุม">ส่วนธุรการและเลขานุการการประชุม</option>
+                                <option value="แผนกธุรการ">แผนกธุรการ</option>
+                                <option value="แผนกเลขานุการการประชุม">แผนกเลขานุการการประชุม</option>
+                                <option value="ส่วนทรัพยากรบุคคล">ส่วนทรัพยากรบุคคล</option>
+                                <option value="แผนกพัฒนาทรัพยากรบุคคล">แผนกพัฒนาทรัพยากรบุคคล</option>
+                                <option value="แผนกอาชีวอนามัยและความปลอดภัย">แผนกอาชีวอนามัยและความปลอดภัย</option>
+                                <option value="ส่วนกฎหมายและระเบียบ">ส่วนกฎหมายและระเบียบ</option>
+                                <option value="ส่วนมาตรฐานและวิชาการ">ส่วนมาตรฐานและวิชาการ</option>
+                                <option value="ส่วนโครงการพิเศษ">ส่วนโครงการพิเศษ</option>
+                                <option value="แผนกOne Stop Service 1">แผนกOne Stop Service 1</option>
+                                <option value="แผนกOne Stop Service 2">แผนกOne Stop Service 2</option>
+                                <option value="แผนกOne Stop Service 3">แผนกOne Stop Service 3</option>
+                                <option value="แผนกตลาดไท">แผนกตลาดไท</option>
+                                <option value="ประสานงานขายและพัฒนาธุรกิจ 1">ประสานงานขายและพัฒนาธุรกิจ 1</option>
+                                <option value="ประสานงานขายและพัฒนาธุรกิจ 2">ประสานงานขายและพัฒนาธุรกิจ 2</option>
+                                <option value="กรรมการผู้อำนวยการ">กรรมการผู้อำนวยการ</option>
+                                <option value="รองกรรมการผู้อำนวยการ สายงานปฏิบัติการ">รองกรรมการผู้อำนวยการ สายงานปฏิบัติการ</option>
+                                <option value="รองกรรมการผู้อำนวยการ สายงานบริหาร">รองกรรมการผู้อำนวยการ สายงานบริหาร</option>
+                                <option value="ส่วนตรวจสอบภายใน">ส่วนตรวจสอบภายใน</option>
+                                <option value="ผู้เชี่ยวชาญ">ผู้เชี่ยวชาญ</option>
+                                <option value="ที่ปรึกษาบริษัทฯ">ที่ปรึกษาบริษัทฯ</option>
+                                <option value="คณะกรรมการ">คณะกรรมการ</option>
+                                <option value="กลุ่มงาน One Stop Service">กลุ่มงาน One Stop Service</option>
+                                <option value="กลุ่มงาน กฎหมายและคดีความ">กลุ่มงาน กฎหมายและคดีความ</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-custom">หัวข้อการประชุม</label>
+                            <input type="text" name="name" id="edit_topic" class="form-control form-control-custom" required>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6 mb-3">
+                                <label class="form-label-custom">Zoom Account</label>
+                                <select name="room" id="edit_room" class="form-select form-select-custom">
+                                    <option value="Zoom Account 1">Zoom Account 1</option>
+                                    <option value="Zoom Account 2">Zoom Account 2</option>
+                                </select>
+                            </div>
+                            <div class="col-6 mb-3">
+                                <label class="form-label-custom">วันที่</label>
+                                <input type="date" name="date" id="edit_date" class="form-control form-control-custom" required>
+                            </div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label-custom">เริ่ม</label>
+                                <select name="start_time" id="edit_start" class="form-select form-select-custom" required>
+                                    <option value="">-- เลือกเวลา --</option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label-custom">ถึง</label>
+                                <select name="end_time" id="edit_end" class="form-select form-select-custom" required>
+                                    <option value="">-- เลือกเวลา --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light-modal btn-modal" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button type="submit" class="btn btn-primary-modal btn-modal">บันทึก</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal fade" id="addUserModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fa-solid fa-user-plus me-2"></i>
+                        เพิ่มผู้ใช้ใหม่
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="/add_user" method="POST">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label-custom">Username</label>
+                            <input type="text" name="username" class="form-control form-control-custom" placeholder="ตั้งชื่อผู้ใช้" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-custom">Password</label>
+                            <input type="password" name="password" class="form-control form-control-custom" placeholder="ตั้งรหัสผ่าน" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light-modal btn-modal" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button type="submit" class="btn btn-success-modal btn-modal">สร้าง</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fa-solid fa-user-pen me-2"></i>
+                        แก้ไขผู้ใช้
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="editUserForm" method="POST">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label-custom">Username</label>
+                            <input type="text" name="username" id="edit_u_username" class="form-control form-control-custom" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label-custom">Password ใหม่ (ไม่ต้องกรอกหากไม่เปลี่ยน)</label>
+                            <input type="password" name="password" class="form-control form-control-custom" placeholder="รหัสใหม่">
+                        </div>
+                        <p class="small text-danger mt-2"><i class="fa-solid fa-triangle-exclamation me-1"></i> หากเปลี่ยนรหัสผ่าน เครื่องอื่นที่ล็อกอินชื่อนี้อยู่จะต้องเข้าสู่ระบบใหม่</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light-modal btn-modal" data-bs-dismiss="modal">ยกเลิก</button>
+                        <button type="submit" class="btn btn-primary-modal btn-modal">บันทึก</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    Swal.fire({
+                        icon: '{{ "success" if category == "success" else "error" }}',
+                        title: '{{ message }}',
+                        timer: 2500,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                });
+            </script>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // ============ Confirm Logout ============
+        function confirmLogout(event) {
+            event.preventDefault();
+            Swal.fire({
+                title: 'ออกจากระบบ',
+                text: 'คุณต้องการออกจากระบบหรือไม่?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#2563eb',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: '<i class="fa-solid fa-check"></i> ยืนยัน',
+                cancelButtonText: '<i class="fa-solid fa-xmark"></i> ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) window.location.href = '/logout';
+            });
+            return false;
+        }
+
+        // ============ Section Switch ============
+        function switchSection(section, btn) {
+            document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+
+            if (section === 'user') {
+                document.querySelector('.booking-section').style.display = 'none';
+                document.querySelectorAll('.booking-controls').forEach(el => el.style.display = 'none');
+                document.getElementById('dateFilterBar').style.display = 'none';
+                document.querySelector('.user-section').style.display = 'block';
+                document.querySelectorAll('.user-controls').forEach(el => el.style.removeProperty('display'));
+                document.getElementById('btn-user').classList.add("active");
+            } else {
+                document.querySelector('.booking-section').style.display = 'block';
+                document.querySelectorAll('.booking-controls').forEach(el => el.style.removeProperty('display'));
+                document.getElementById('dateFilterBar').style.display = 'flex';
+                document.querySelector('.user-section').style.display = 'none';
+                document.querySelectorAll('.user-controls').forEach(el => el.style.display = 'none');
+                document.getElementById('btn-booking').classList.add("active");
+            }
+        }
+
+        // ============ Search Filter ============
+        function filterData() {
+            const searchInput = document.getElementById("searchInput").value.toLowerCase();
+            const rows = document.querySelectorAll(".booking-row");
+            rows.forEach(row => {
+                const rowText = row.innerText.toLowerCase();
+                row.style.display = rowText.includes(searchInput) ? "" : "none";
+            });
+            // Hide empty day groups
+            document.querySelectorAll('.day-group').forEach(group => {
+                const visibleRows = group.querySelectorAll('.booking-row:not([style*="display: none"])');
+                group.style.display = visibleRows.length > 0 ? '' : 'none';
+            });
+        }
+
+        function filterUser() {
+            const searchInput = document.getElementById("searchUserInput").value.toLowerCase();
+            const rows = document.querySelectorAll(".user-row");
+            rows.forEach(row => {
+                const rowText = row.innerText.toLowerCase();
+                row.style.display = rowText.includes(searchInput) ? "" : "none";
+            });
+        }
+
+        // ============ Date Filter ============
+        function filterByDate() {
+            const dateVal = document.getElementById('dateFilterInput').value;
+            if (!dateVal) {
+                clearDateFilter();
+                return;
+            }
+            const groups = document.querySelectorAll('.day-group');
+            let found = false;
+            groups.forEach(group => {
+                if (group.getAttribute('data-date') === dateVal) {
+                    group.style.display = '';
+                    found = true;
+                } else {
+                    group.style.display = 'none';
+                }
+            });
+            document.getElementById('filterInfo').textContent = found
+                ? 'แสดงรายการวันที่ ' + dateVal
+                : 'ไม่พบรายการในวันที่ ' + dateVal;
+        }
+
+        function clearDateFilter() {
+            document.getElementById('dateFilterInput').value = '';
+            document.querySelectorAll('.day-group').forEach(group => group.style.display = '');
+            document.getElementById('filterInfo').textContent = '';
+        }
+
+        // ============ Generate Time Options ============
+        function generateTimeOptions() {
+            const startSelect = document.getElementById('edit_start');
+            const endSelect = document.getElementById('edit_end');
+            
+            if (!startSelect || !endSelect) return;
+            
+            for (let h = 0; h < 24; h++) {
+                for (let m = 0; m < 60; m += 30) {
+                    const hour = h.toString().padStart(2, '0');
+                    const minute = m.toString().padStart(2, '0');
+                    const timeValue = hour + ':' + minute;
+                    
+                    const startOption = document.createElement('option');
+                    startOption.value = timeValue;
+                    startOption.textContent = timeValue;
+                    startSelect.appendChild(startOption);
+                    
+                    const endOption = document.createElement('option');
+                    endOption.value = timeValue;
+                    endOption.textContent = timeValue;
+                    endSelect.appendChild(endOption);
+                }
+            }
+        }
+
+        // ============ Scroll to Today ============
+        window.addEventListener('DOMContentLoaded', function() {
+            // Generate time options for edit modal
+            generateTimeOptions();
+            
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('dateFilterInput').value = today;
+
+            // Mark today's header
+            const todayGroup = document.querySelector('.day-group[data-date="' + today + '"]');
+            if (todayGroup) {
+                const header = todayGroup.querySelector('.day-header');
+                if (header) {
+                    header.classList.add('today-header');
+                    const badge = document.createElement('span');
+                    badge.className = 'today-badge ms-2';
+                    badge.textContent = 'วันนี้';
+                    header.querySelector('.day-count').before(badge);
+                }
+                // Scroll to today
+                setTimeout(() => {
+                    todayGroup.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
+            }
+
+            // Check URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('tab') === 'user') {
+                switchSection('user', document.getElementById('btn-user'));
+            }
+        });
+
+        // ============ Edit Booking Modal ============
+        function openEditModal(id, req, dept, topic, room, date, start, end) {
+            document.getElementById('editForm').action = '/edit_booking/' + id;
+            document.getElementById('edit_requester').value = req;
+
+            let deptSelect = document.getElementById('edit_dept');
+            if (deptSelect) {
+                let deptExists = Array.from(deptSelect.options).some(opt => opt.value === dept);
+                if (!deptExists && dept && dept !== 'None' && dept !== '') {
+                    deptSelect.add(new Option(dept, dept));
+                }
+                deptSelect.value = dept;
+            }
+
+            document.getElementById('edit_topic').value = topic;
+            document.getElementById('edit_room').value = room;
+            document.getElementById('edit_date').value = date;
+            document.getElementById('edit_start').value = start;
+            document.getElementById('edit_end').value = end;
+
+            new bootstrap.Modal(document.getElementById('editModal')).show();
+        }
+
+        // ============ Approve & Send Zoom Modal ============
+        function openApproveModal(id, requester, topic) {
+            document.getElementById('approveForm').action = '/approve_zoom/' + id;
+            document.getElementById('approve_requester').textContent = requester;
+            document.getElementById('approve_topic').textContent = topic;
+            new bootstrap.Modal(document.getElementById('approveModal')).show();
+        }
+
+        // ============ Edit User Modal ============
+        function openEditUserModal(id, username) {
+            document.getElementById('editUserForm').action = '/edit_user/' + id;
+            document.getElementById('edit_u_username').value = username;
+            new bootstrap.Modal(document.getElementById('editUserModal')).show();
+        }
+
+        // ============ Confirm Delete Booking ============
+        function confirmDelete(id, name) {
+            Swal.fire({
+                title: 'ยืนยันการลบ',
+                text: 'ต้องการลบการจองของ ' + name + ' ?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: '<i class="fa-solid fa-trash"></i> ลบ',
+                cancelButtonText: '<i class="fa-solid fa-xmark"></i> ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) window.location.href = '/delete/' + id;
+            });
+        }
+
+        // ============ Confirm Delete User ============
+        function confirmDeleteUser(id, username) {
+            Swal.fire({
+                title: 'ยืนยันการลบ',
+                text: 'ต้องการลบผู้ใช้ "' + username + '" ?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: '<i class="fa-solid fa-trash"></i> ลบ',
+                cancelButtonText: '<i class="fa-solid fa-xmark"></i> ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) window.location.href = '/delete_user/' + id;
+            });
+        }
+    </script>
+</body>
+</html>
