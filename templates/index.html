@@ -661,7 +661,6 @@
                             <thead>
                                 <tr>
                                     <th class="text-center">เวลา</th>
-                                    <th class="text-center">Zoom</th>
                                     <th class="text-center">ส่วน/สาขา</th>
                                 </tr>
                             </thead>
@@ -747,6 +746,9 @@
                             zoomInfo = '<div><strong>Account:</strong> ' + booking.zoom_account + '</div>' +
                                       '<div><strong>Email:</strong> ' + booking.zoom_email + '</div>' +
                                       '<div><strong>Password:</strong> ' + booking.zoom_password + '</div>';
+                        } else if (booking.status === 'completed') {
+                            statusBadge = '<span class="badge bg-secondary">เสร็จสิ้น</span>';
+                            zoomInfo = '<span class="text-muted">-</span>';
                         }
                         
                         html += '<tr>' +
@@ -823,14 +825,17 @@
                 initialView: 'dayGridMonth',
                 locale: 'th',
                 events: '/api/bookings',
-                dayMaxEvents: 0,
+                dayMaxEvents: 2,
                 headerToolbar: {
                     left: 'title',
                     center: '',
                     right: 'today prev,next'
                 },
                 moreLinkContent: function(arg) { 
-                    return { html: '<div class="booking-badge">📌 ' + arg.num + ' รายการ</div>' }; 
+                    return { html: '<div class="booking-badge" style="pointer-events:none;">📌 ' + arg.num + ' รายการ</div>' }; 
+                },
+                moreLinkClick: function() { 
+                    return 'none'; 
                 },
                 dateClick: (info) => { openBookingModal(info.dateStr); }
             });
@@ -859,7 +864,6 @@
                                 const eTime = b.end.split('T')[1];
                                 html += `<tr>
                                     <td class="fw-bold" style="color: #2563eb;">${sTime} - ${eTime}</td>
-                                    <td><span class="badge-room">${b.extendedProps.room}</span></td>
                                     <td>${b.extendedProps.dept}</td>
                                 </tr>`;
                             });
