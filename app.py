@@ -16,12 +16,12 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'zoom_booking_dev_fallba
 # กำหนด Zoom Account สำเร็จรูป
 ZOOM_ACCOUNTS = {
     'Zoom Account 1': {
-        'email': 'zoom1@yourcompany.com',
-        'password': 'Zoom1Password2024'
+        'email': 'zoomclt@centrallabthai.com',
+        'password': 'P@ssW0rd'
     },
     'Zoom Account 2': {
-        'email': 'zoom2@yourcompany.com', 
-        'password': 'Zoom2Password2024'
+        'email': 'zoomit@centrallabthai.com', 
+        'password': 'Itclt@152'
     }
 }
 
@@ -140,7 +140,7 @@ def index():
 @login_required
 def get_bookings():
     try:
-        bookings = Booking.query.all()
+        bookings = Booking.query.filter_by(status='approved').all()
         return jsonify([{
             'id': b.id, 
             'title': f"[{b.room}] {b.name}", 
