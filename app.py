@@ -20,7 +20,7 @@ ZOOM_ACCOUNTS = {
         'password': 'P@ssW0rd'
     },
     'Zoom Account 2': {
-        'email': 'zoom@centrallabthai.com', 
+        'email': 'zoomit@centrallabthai.com', 
         'password': 'Itclt@152'
     }
 }
