@@ -393,10 +393,26 @@ def edit_booking(id):
         booking.requester_name = req_name
         booking.department = dept
         booking.name = topic
-        booking.room = room
         booking.date = date
         booking.start_time = start
         booking.end_time = end
+        
+        # ถ้า room (Zoom Account) เปลี่ยน ให้อัพเดต zoom credentials ด้วย
+        if booking.room != room:
+            if room in ZOOM_ACCOUNTS:
+                booking.room = room
+                booking.zoom_account = room
+                booking.zoom_email = ZOOM_ACCOUNTS[room]['email']
+                booking.zoom_password = ZOOM_ACCOUNTS[room]['password']
+            else:
+                # ถ้าเปลี่ยนเป็น room ที่ไม่ใช่ Zoom Account ให้ clear zoom credentials
+                booking.room = room
+                booking.zoom_account = None
+                booking.zoom_email = None
+                booking.zoom_password = None
+        else:
+            booking.room = room
+        
         db.session.commit()
         flash('แก้ไขข้อมูลเรียบร้อยแล้ว', 'success')
     return redirect(url_for('admin_panel', tab=room))
